@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>ParallelView · 智能立体融合器 | 动态布局</title>
+    <title>ParallelView · 智能立体融合器 | 动态布局+尺寸提示</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         body {
             background: linear-gradient(145deg, #1a2634 0%, #0f1722 100%);
-            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, 'Roboto', sans-serif;
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
             margin: 0;
             min-height: 100vh;
             padding: 20px;
@@ -58,10 +56,7 @@
             transition: 0.2s;
             margin-bottom: 20px;
         }
-        .upload-area:hover {
-            border-color: #2c9bff;
-            background: rgba(44, 155, 255, 0.08);
-        }
+        .upload-area:hover { border-color: #2c9bff; background: rgba(44, 155, 255, 0.08); }
         .url-section {
             background: #07121acc;
             border-radius: 28px;
@@ -91,8 +86,6 @@
             cursor: pointer;
         }
         .file-input { display: none; }
-        
-        /* 动态布局容器 */
         .preview-section {
             display: flex;
             flex-wrap: wrap;
@@ -100,14 +93,8 @@
             margin: 20px 0;
             transition: all 0.2s;
         }
-        /* 默认上下排列 (横图或方形) */
-        .preview-section.vertical-layout {
-            flex-direction: column;
-        }
-        /* 竖图时左右并排 */
-        .preview-section.horizontal-layout {
-            flex-direction: row;
-        }
+        .preview-section.vertical-layout { flex-direction: column; }
+        .preview-section.horizontal-layout { flex-direction: row; }
         .card {
             background: #10181fcc;
             backdrop-filter: blur(8px);
@@ -145,23 +132,8 @@
             gap: 12px;
             justify-content: center;
         }
-        .btn-primary {
-            background: #2c9bff;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 40px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .btn-secondary {
-            background: #3a4e62;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 40px;
-            color: white;
-            cursor: pointer;
-        }
+        .btn-primary { background: #2c9bff; border: none; padding: 8px 20px; border-radius: 40px; color: white; font-weight: bold; cursor: pointer; }
+        .btn-secondary { background: #3a4e62; border: none; padding: 8px 20px; border-radius: 40px; color: white; cursor: pointer; }
         .slider-group {
             background: #07101670;
             padding: 8px 16px;
@@ -186,7 +158,7 @@
             opacity: 0.6;
         }
         .status-msg {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             margin-top: 8px;
             color: #ffb347;
             text-align: center;
@@ -194,17 +166,16 @@
         @media (max-width: 780px) {
             .url-section { flex-direction: column; }
             .control-bar { flex-direction: column; align-items: stretch; }
-            /* 手机屏幕强制上下布局，避免过窄 */
-            .preview-section.horizontal-layout {
-                flex-direction: column;
-            }
+            .preview-section.horizontal-layout { flex-direction: column; }
         }
     </style>
 </head>
 <body>
 <div class="app-container">
-    <h1>🧬 ParallelView · 立体融合器 <small>动态布局 | 红蓝3D + 摆动动画</small></h1>
-    <div class="sub">上传左右并排平行眼图片 → 一键生成可直接看出3D的立体效果（无需自己融合）</div>
+    <h1>🧬 ParallelView · 立体融合器 <small>动态布局 | 红蓝3D+摆动动画</small></h1>
+    <div class="sub">上传左右并排平行眼图片 → 一键生成可直接看出3D的立体效果（无需自己融合）<br>
+    <span style="font-size:0.8rem;">💡 注：融合后图片宽度为原图一半，高度不变，因此若原图宽<2×高，结果图会变为竖向（正常现象）</span>
+    </div>
 
     <div class="upload-area" id="uploadArea">
         <div class="upload-icon">📁📸</div>
@@ -219,7 +190,6 @@
         <button id="clearUrlBtn" class="url-btn" style="background:#3a4e62;">清空</button>
     </div>
 
-    <!-- 动态布局容器 -->
     <div class="preview-section" id="previewSection">
         <div class="card">
             <h3>📌 原始并排图</h3>
@@ -246,12 +216,15 @@
     </div>
 
     <div class="info-tip">
-        <strong>📌 使用说明</strong><br>
-        • 布局将根据原图宽高比自动优化：<strong>竖图（高>宽）左右并排，横图/方图上下排列</strong>，充分展示细节。<br>
+        <strong>📌 使用说明 & 常见疑问</strong><br>
+        • 布局将根据原图宽高比自动优化：<strong>竖图（高>宽）左右并排，横图/方图上下排列</strong><br>
         • 本地图片上传后：点击「生成红蓝立体图」→ 红蓝3D效果（需佩戴红蓝眼镜）<br>
         • 点击「生成摆动动画」→ 左右图交替闪烁，产生无需眼镜的伪立体感<br>
         • 视差调节可微调左右图对齐距离，改善立体融合效果<br>
-        • 跨域URL图片：只能显示原图，无法融合（安全限制），请下载后本地上传
+        • <strong>❓ 为什么我的横图融合后变成了竖图？</strong><br>
+        &nbsp;&nbsp;→ 因为融合后的图片宽度 = 原图宽度的一半，高度不变。如果原图宽度 < 2×高度，结果图就会变成竖向。<br>
+        &nbsp;&nbsp;→ 例如原图 800×600 → 结果图 400×600（竖）。这是正常的数学结果，并非bug。<br>
+        • 跨域URL图片：只能显示原图，无法融合（安全限制），请下载后本地上传。
     </div>
     <footer>✨ 智能布局 + 一键立体融合，真正替你看到3D效果！</footer>
 </div>
@@ -273,38 +246,29 @@
         const clearUrlBtn = document.getElementById('clearUrlBtn');
         const previewSection = document.getElementById('previewSection');
 
-        // 状态
-        let sourceImg = null;        // ImageBitmap (完整原图)
+        let sourceImg = null;
         let imgWidth = 0, imgHeight = 0;
-        let currentMode = null;      // 'file', 'url_ok', 'url_cross'
-        let disparity = 0;           // 视差偏移
+        let currentMode = null;
+        let disparity = 0;
         let animationInterval = null;
         let isAnimating = false;
 
-        // 动态布局函数：根据宽高比调整 preview-section 的布局方向
         function updateLayoutBasedOnAspect() {
             if (!imgWidth || !imgHeight) return;
-            const isPortrait = imgHeight > imgWidth;  // 竖图 (高>宽)
+            const isPortrait = imgHeight > imgWidth;
             if (isPortrait) {
-                // 左右并排 ( horizontal-layout 表示 row 方向)
                 previewSection.classList.remove('vertical-layout');
                 previewSection.classList.add('horizontal-layout');
             } else {
-                // 上下排列
                 previewSection.classList.remove('horizontal-layout');
                 previewSection.classList.add('vertical-layout');
             }
         }
 
-        // 辅助：释放旧图
         function releaseSource() {
-            if (sourceImg) {
-                sourceImg.close?.();
-                sourceImg = null;
-            }
+            if (sourceImg) { sourceImg.close?.(); sourceImg = null; }
         }
 
-        // 启用/禁用融合控件
         function setFusionEnabled(enabled) {
             makeAnaglyphBtn.disabled = !enabled;
             makeWiggleBtn.disabled = !enabled;
@@ -324,7 +288,7 @@
             }
         }
 
-        // 生成红蓝立体图 (基于当前视差)
+        // 生成红蓝立体图，并显示尺寸提示
         function generateAnaglyph() {
             if (!sourceImg) return;
             if (animationInterval) clearInterval(animationInterval);
@@ -364,7 +328,8 @@
                         }
                     }
                     ctx.putImageData(outputData, 0, 0);
-                    resultStatus.innerHTML = '✅ 红蓝立体图已生成！<br>佩戴红蓝眼镜即可看到立体效果';
+                    const orientation = (halfW >= halfH) ? '横向' : '竖向';
+                    resultStatus.innerHTML = `✅ 红蓝立体图已生成！尺寸 ${halfW}×${halfH}（${orientation}）<br>佩戴红蓝眼镜即可看到立体效果`;
                 } catch(e) {
                     console.error(e);
                     resultStatus.innerText = '生成失败，请检查图片是否标准并排图';
@@ -372,7 +337,6 @@
             }, 10);
         }
 
-        // 摆动动画
         function startWiggle() {
             if (!sourceImg) return;
             if (animationInterval) clearInterval(animationInterval);
@@ -399,40 +363,30 @@
                 ctx.putImageData((frame % 2 === 0) ? leftImgData : rightImgData, 0, 0);
                 frame++;
             }, 300);
-            resultStatus.innerHTML = '🌀 摆动动画播放中 (左右交替) · 停止请点击其他按钮';
+            const orientation = (halfW >= halfH) ? '横向' : '竖向';
+            resultStatus.innerHTML = `🌀 摆动动画播放中 (左右交替) · 尺寸 ${halfW}×${halfH}（${orientation}）<br>停止请点击其他按钮`;
         }
 
         function stopWiggle() {
-            if (animationInterval) {
-                clearInterval(animationInterval);
-                animationInterval = null;
-            }
+            if (animationInterval) { clearInterval(animationInterval); animationInterval = null; }
             isAnimating = false;
         }
 
-        // 处理本地上传
         async function handleLocalFile(file) {
-            if (!file || !file.type.startsWith('image/')) {
-                alert('请选择图片文件');
-                return;
-            }
+            if (!file || !file.type.startsWith('image/')) { alert('请选择图片文件'); return; }
             stopWiggle();
             setFusionEnabled(false);
             const objectUrl = URL.createObjectURL(file);
             const img = new Image();
             img.onload = async () => {
                 try {
-                    if (img.width % 2 !== 0) {
-                        alert('警告：图片宽度为奇数，可能影响左右分割');
-                    }
+                    if (img.width % 2 !== 0) alert('警告：图片宽度为奇数，可能影响左右分割');
                     const bitmap = await createImageBitmap(img);
                     releaseSource();
                     sourceImg = bitmap;
                     imgWidth = img.width;
                     imgHeight = img.height;
-                    // 动态布局
                     updateLayoutBasedOnAspect();
-                    // 显示原图
                     originalBox.innerHTML = '';
                     const displayImg = document.createElement('img');
                     displayImg.src = objectUrl;
@@ -458,12 +412,8 @@
             img.src = objectUrl;
         }
 
-        // URL加载
         async function handleUrl(url) {
-            if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
-                alert('请输入有效http/https地址');
-                return;
-            }
+            if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) { alert('请输入有效http/https地址'); return; }
             stopWiggle();
             setFusionEnabled(false);
             originalBox.innerHTML = '<div style="color:#aac9e0;">加载中...</div>';
@@ -487,7 +437,6 @@
                     setFusionEnabled(true);
                     resultStatus.innerText = 'URL图片支持CORS，融合功能可用';
                 } catch(e) {
-                    // 跨域失败
                     originalBox.innerHTML = '';
                     const fallbackImg = document.createElement('img');
                     fallbackImg.src = url;
@@ -506,11 +455,8 @@
             };
         }
 
-        // 事件绑定
         uploadArea.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files[0]) handleLocalFile(e.target.files[0]);
-        });
+        fileInput.addEventListener('change', (e) => { if (e.target.files[0]) handleLocalFile(e.target.files[0]); });
         uploadArea.addEventListener('dragover', (e) => e.preventDefault());
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
@@ -518,24 +464,11 @@
             if (file && file.type.startsWith('image/')) handleLocalFile(file);
             else alert('请拖入图片文件');
         });
-        loadUrlBtn.addEventListener('click', () => {
-            const url = imageUrlInput.value.trim();
-            if (url) handleUrl(url);
-        });
+        loadUrlBtn.addEventListener('click', () => { const url = imageUrlInput.value.trim(); if (url) handleUrl(url); });
         clearUrlBtn.addEventListener('click', () => { imageUrlInput.value = ''; });
         
-        makeAnaglyphBtn.addEventListener('click', () => {
-            if (sourceImg && currentMode !== null) {
-                stopWiggle();
-                generateAnaglyph();
-            }
-        });
-        makeWiggleBtn.addEventListener('click', () => {
-            if (sourceImg && currentMode !== null) {
-                if (animationInterval) stopWiggle();
-                startWiggle();
-            }
-        });
+        makeAnaglyphBtn.addEventListener('click', () => { if (sourceImg && currentMode !== null) { stopWiggle(); generateAnaglyph(); } });
+        makeWiggleBtn.addEventListener('click', () => { if (sourceImg && currentMode !== null) { if (animationInterval) stopWiggle(); startWiggle(); } });
         disparitySlider.addEventListener('input', (e) => {
             disparity = parseInt(e.target.value, 10);
             disparityVal.innerText = disparity;
@@ -544,10 +477,8 @@
             }
         });
         
-        // 初始状态
         setFusionEnabled(false);
-        resultCanvas.width = 400;
-        resultCanvas.height = 260;
+        resultCanvas.width = 400; resultCanvas.height = 260;
         const ctx = resultCanvas.getContext('2d');
         ctx.fillStyle = '#0a1015';
         ctx.fillRect(0, 0, 400, 260);
