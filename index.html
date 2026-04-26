@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>平行眼3D看图 | 裸眼立体影像工具</title>
-    <!-- Tailwind CSS CDN + 基础深色主题 -->
+    <title>红蓝3D立体图生成器 | 红蓝眼镜立体影像</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 自定义配置深色主题，覆盖默认颜色 -->
+    <!-- 自定义额外样式 -->
     <style>
         * {
-            user-select: none; /* 提升拖动体验时避免文字选中，但输入框保留 */
+            user-select: none; /* 提升拖拽体验，但输入框保留 */
         }
         body {
             background: #0B0E14;
@@ -31,7 +31,6 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #5E6A81;
         }
-        /* 预览 Canvas 容器样式优化 */
         .canvas-viewer {
             background: #0F1219;
             border-radius: 1rem;
@@ -44,13 +43,8 @@
             border: 1px solid #2A2F3F;
         }
         .slider-glow::-webkit-slider-thumb {
-            background: #3b82f6;
-            box-shadow: 0 0 4px #60a5fa;
-        }
-        /* 自适应滚动容器内图片缩放提示 */
-        .info-badge {
-            background: #1E293Bdd;
-            backdrop-filter: blur(4px);
+            background: #ef4444;
+            box-shadow: 0 0 5px #f87171;
         }
         button:active {
             transform: scale(0.97);
@@ -58,30 +52,34 @@
         .transition-smooth {
             transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
         }
+        .info-badge-redblue {
+            background: linear-gradient(135deg, #ff4d4d20, #0044ff20);
+            border-left: 3px solid #ef4444;
+        }
     </style>
 </head>
 <body class="text-gray-200 antialiased">
 
     <div class="max-w-[1600px] mx-auto px-4 py-6 md:py-8">
-        <!-- 头部标题区 -->
+        <!-- 头部 -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-8">
             <div>
-                <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">平行眼3D · 立体幻视</h1>
-                <p class="text-sm text-gray-400 mt-1">左右错位视差 | 裸眼平行眼融合3D效果</p>
+                <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-red-400 to-blue-400 bg-clip-text text-transparent">🔴🔵 红蓝立体 · Anaglyph 3D</h1>
+                <p class="text-sm text-gray-400 mt-1">基于视差偏移生成红蓝立体图 | 佩戴红蓝眼镜获得强烈景深感</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <button id="resetAllBtn" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm font-medium transition-smooth flex items-center gap-1 shadow-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                     重置清空
                 </button>
-                <button id="downloadBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-sm font-medium transition-smooth flex items-center gap-1 shadow-md">
+                <button id="downloadBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-medium transition-smooth flex items-center gap-1 shadow-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m-4-4l4 4 4-4" /></svg>
-                    下载3D成品图
+                    下载红蓝3D图
                 </button>
             </div>
         </div>
 
-        <!-- 操作区：本地上传 + URL输入 + 视差调节 -->
+        <!-- 操作区：上传 / URL / 视差强度 -->
         <div class="control-card rounded-2xl p-5 mb-8 border border-gray-800/60 shadow-lg">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
                 <!-- 本地上传 -->
@@ -90,35 +88,35 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m-4-4l4 4 4-4" /></svg>
                         本地上传图片
                     </label>
-                    <input type="file" id="fileUpload" accept="image/jpeg,image/png,image/webp,image/gif" class="block w-full text-sm text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-900/50 file:text-indigo-300 hover:file:bg-indigo-800/60 cursor-pointer" />
+                    <input type="file" id="fileUpload" accept="image/jpeg,image/png,image/webp,image/gif" class="block w-full text-sm text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-900/50 file:text-blue-300 hover:file:bg-blue-800/60 cursor-pointer" />
                 </div>
-                <!-- URL 加载 -->
+                <!-- URL加载 -->
                 <div class="lg:col-span-1">
                     <label class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.102m1.858-6.364a4 4 0 015.656 0l4 4a4 4 0 01-5.656 5.656l-1.102-1.102" /></svg>
                         网络图片URL
                     </label>
                     <div class="flex gap-2">
-                        <input type="text" id="urlInput" placeholder="https://... 支持jpg/png/webp/gif" class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
-                        <button id="loadUrlBtn" class="bg-indigo-700 hover:bg-indigo-600 px-5 py-2 rounded-xl text-sm font-medium transition">加载</button>
+                        <input type="text" id="urlInput" placeholder="https://... 支持jpg/png/webp/gif" class="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
+                        <button id="loadUrlBtn" class="bg-blue-700 hover:bg-blue-600 px-5 py-2 rounded-xl text-sm font-medium transition">加载</button>
                     </div>
                 </div>
-                <!-- 视差强度滑块 + 立体强度辅助 -->
+                <!-- 视差滑块 -->
                 <div>
                     <div class="flex justify-between items-center mb-1">
-                        <label class="text-sm font-medium text-gray-300">立体视差强度</label>
-                        <span id="disparityValue" class="text-xs bg-gray-800 px-2 py-0.5 rounded-full text-indigo-300">中</span>
+                        <label class="text-sm font-medium text-gray-300">立体视差强度 (红蓝偏移)</label>
+                        <span id="disparityValue" class="text-xs bg-gray-800 px-2 py-0.5 rounded-full text-red-300">中</span>
                     </div>
                     <input type="range" id="disparitySlider" min="0" max="100" value="55" step="1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-glow">
                     <div class="flex justify-between text-[11px] text-gray-500 mt-1 px-1">
-                        <span>弱 (平缓)</span><span>中 (舒适)</span><span>强 (立体冲击)</span>
+                        <span>弱景深</span><span>舒适立体</span><span>强冲击</span>
                     </div>
-                    <p class="text-[11px] text-gray-500 mt-2 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-blue-400 rounded-full"></span> 偏移越大景深越强，建议适中保持边缘融合</p>
+                    <p class="text-[11px] text-gray-500 mt-2 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-red-400 rounded-full"></span> 偏移越大景深越强，建议适中避免边缘重影过度</p>
                 </div>
             </div>
         </div>
 
-        <!-- 双栏预览区：原图 vs 3D效果图 (均支持缩放平移) -->
+        <!-- 双栏预览区：原图 vs 红蓝立体图 -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <!-- 原图预览区 -->
             <div class="flex flex-col space-y-3">
@@ -130,49 +128,51 @@
                     <canvas id="originalCanvas" class="w-full h-full object-contain cursor-grab active:cursor-grabbing"></canvas>
                     <div class="absolute bottom-2 right-2 text-[10px] bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-sm">🖱️ 滚轮缩放 | 拖拽平移</div>
                 </div>
-                <p class="text-xs text-gray-400 text-center">原始图片 (经智能缩放宽高限制，保持画质性能)</p>
+                <p class="text-xs text-gray-400 text-center">原始图片 (智能适配大图，保持最佳性能)</p>
             </div>
 
-            <!-- 3D效果图展示区 (平行眼左右错位) -->
+            <!-- 红蓝立体效果图展示 -->
             <div class="flex flex-col space-y-3">
                 <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-semibold flex items-center gap-2"><span class="w-2 h-2 bg-indigo-500 rounded-full"></span> 平行眼3D成品图</h2>
+                    <h2 class="text-lg font-semibold flex items-center gap-2"><span class="w-2 h-2 bg-red-500 rounded-full"></span> 🔴🔵 红蓝3D立体图</h2>
                     <button id="reset3DViewBtn" class="text-xs bg-gray-700/60 hover:bg-gray-600 px-3 py-1 rounded-lg transition">重置视图</button>
                 </div>
                 <div class="canvas-viewer relative overflow-hidden rounded-xl border border-gray-800/80 bg-[#0B0E14]" style="min-height: 360px; height: auto; aspect-ratio: 16/9; max-height: 480px;">
                     <canvas id="stereoCanvas" class="w-full h-full object-contain cursor-grab active:cursor-grabbing"></canvas>
-                    <div class="absolute bottom-2 right-2 text-[10px] bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-sm">✨ 左右错位平行眼 | 支持缩放拖拽</div>
+                    <div class="absolute bottom-2 right-2 text-[10px] bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-sm">🕶️ 佩戴红蓝眼镜 | 支持缩放拖拽</div>
                 </div>
-                <p class="text-xs text-gray-400 text-center">⬅️ 左图偏左 ➡️ 右图偏右 | 放松双眼远眺，融合中间区域获得立体感</p>
+                <p class="text-xs text-gray-400 text-center">红色滤镜(左眼) + 青蓝滤镜(右眼) 融合出彩色立体世界</p>
             </div>
         </div>
 
-        <!-- 观看教程提示框 -->
-        <div class="mt-5 bg-gradient-to-r from-gray-900/60 to-gray-800/40 rounded-2xl p-4 border border-gray-800/50">
+        <!-- 红蓝眼镜观看教程提示框 -->
+        <div class="mt-5 info-badge-redblue rounded-2xl p-4 border border-gray-800/50 bg-gray-900/40">
             <div class="flex flex-wrap items-start gap-3">
-                <div class="bg-indigo-900/50 p-2 rounded-xl">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                <div class="bg-red-900/30 p-2 rounded-xl">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                 </div>
                 <div class="flex-1 text-sm">
-                    <p class="font-semibold text-indigo-300 mb-1">🧿 平行眼观看教程：</p>
-                    <p class="text-gray-300 leading-relaxed">1. 将手机/电脑屏幕置于眼前30cm左右；<br>2. 放松双眼，像看远处风景一样让视线“发散”，左右两图慢慢重叠成三个画面，<strong class="text-blue-300">中间虚像即立体影像</strong>；<br>3. 可左右调整视差强度获得最佳景深感，初次尝试可眯眼再缓慢放松。</p>
+                    <p class="font-semibold text-red-300 mb-1">🧿 红蓝立体眼镜观看教程：</p>
+                    <p class="text-gray-300 leading-relaxed">① 佩戴标准红蓝眼镜（左红右蓝/左红右青）；<br>
+                    ② 将屏幕亮度调至舒适状态，保持眼睛平视；<br>
+                    ③ 调节上方「视差强度」滑块，直到获得鲜明、舒适不重影的立体景深；<br>
+                    ✨ 提示：对于复杂纹理图片，中等偏移量（滑块50~70）通常最佳。</p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // ----------------------------- 模块化平行眼3D生成引擎 + 双Canvas交互视图 ---------------------------------
         (function(){
-            // ---------- 全局变量 ----------
-            let originalImageRaw = null;     // 存储原始图片对象(经过缩放限制后的HTMLImageElement)
-            let originalImageBitmap = null;   // 存储缩放后的图片大小信息
-            let currentDisparity = 0.055;     // 默认中等 0.055 (占宽度比例，范围0~0.12)
+            // ---------- 核心变量 ----------
+            let originalImageRaw = null;          // 存储缩放后的原始图片（HTMLImageElement）
+            let currentOffsetPx = 0;              // 当前偏移像素值 (基于图片宽度比例计算)
+            let currentDisparityRatio = 0.055;     // 偏移比例 (0~0.12)
             
-            // 最大图片尺寸限制 (防止超大图卡死, 宽度或高度超过此值等比例缩放)
+            // 大图压缩限制
             const MAX_IMAGE_DIM = 1800;
             
-            // 获取DOM元素
+            // DOM 元素
             const fileInput = document.getElementById('fileUpload');
             const urlInput = document.getElementById('urlInput');
             const loadUrlBtn = document.getElementById('loadUrlBtn');
@@ -183,28 +183,21 @@
             const resetOriginalViewBtn = document.getElementById('resetOriginalViewBtn');
             const reset3DViewBtn = document.getElementById('reset3DViewBtn');
             
-            // Canvas元素及其对应的视图控制器
             const originalCanvas = document.getElementById('originalCanvas');
             const stereoCanvas = document.getElementById('stereoCanvas');
             
-            // ---------- 图片缩放与辅助函数 ----------
+            // ---------- 辅助函数：缩放超大图片 ----------
             function limitImageSize(imgElement) {
                 return new Promise((resolve) => {
                     let width = imgElement.width;
                     let height = imgElement.height;
-                    let needResize = false;
-                    let newWidth = width, newHeight = height;
-                    if(width > MAX_IMAGE_DIM || height > MAX_IMAGE_DIM) {
-                        needResize = true;
-                        const scale = Math.min(MAX_IMAGE_DIM / width, MAX_IMAGE_DIM / height);
-                        newWidth = Math.floor(width * scale);
-                        newHeight = Math.floor(height * scale);
-                    }
-                    if(!needResize) {
+                    if(width <= MAX_IMAGE_DIM && height <= MAX_IMAGE_DIM) {
                         resolve(imgElement);
                         return;
                     }
-                    // 离屏canvas缩放
+                    const scale = Math.min(MAX_IMAGE_DIM / width, MAX_IMAGE_DIM / height);
+                    const newWidth = Math.floor(width * scale);
+                    const newHeight = Math.floor(height * scale);
                     const canvas = document.createElement('canvas');
                     canvas.width = newWidth;
                     canvas.height = newHeight;
@@ -212,25 +205,124 @@
                     ctx.drawImage(imgElement, 0, 0, newWidth, newHeight);
                     const resizedImg = new Image();
                     resizedImg.onload = () => resolve(resizedImg);
-                    resizedImg.src = canvas.toDataURL('image/png');  // 无损但小图兼容性好
+                    resizedImg.src = canvas.toDataURL('image/png');
                 });
             }
             
-            // 通用图片加载器 (处理跨域、gif等)
+            // 通用图片加载器 (支持URL和本地)
             function loadImageFromSource(src, isUrl = true) {
                 return new Promise((resolve, reject) => {
                     const img = new Image();
                     if(isUrl) {
-                        img.crossOrigin = 'Anonymous';  // 尝试匿名跨域，如果服务器不支持则后续会污染报错
+                        img.crossOrigin = 'Anonymous';
                     }
                     img.onload = () => resolve(img);
-                    img.onerror = (err) => reject(new Error(`图片加载失败，请检查URL或文件: ${src}`));
+                    img.onerror = () => reject(new Error(`图片加载失败: ${src.substring(0, 80)}`));
                     img.src = src;
                 });
             }
             
-            // 主流程：加载图片（文件/url）并处理缩放保存
-            async function setMainImageFromSource(source, type = 'file') {
+            // ---------- 核心算法：生成红蓝立体图 (Anaglyph) ----------
+            // 原理：左眼视图(红色通道) 向右偏移 offsetPx； 右眼视图(青蓝色通道) 向左偏移 offsetPx；
+            // 合成最终图像：R = 左视图像素R值， G = 右视图像素G值， B = 右视图像素B值。
+            // 超出边界的部分填充黑色 (避免诡异颜色)。
+            function generateAnaglyphImage(originalImg, offsetPx) {
+                if(!originalImg) return null;
+                const w = originalImg.width;
+                const h = originalImg.height;
+                if(w === 0 || h === 0) return null;
+                
+                // 限制最大偏移不超过图片宽度的12% + 不超过80px，保证美观
+                let maxOffset = Math.min(Math.floor(w * 0.12), 90);
+                let finalOffset = Math.min(offsetPx, maxOffset);
+                finalOffset = Math.max(finalOffset, 1);
+                
+                // 创建离屏canvas，大小与原图一致
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                
+                // 为了高效合成，采用 getImageData 逐像素操作。
+                // 先获取原图完整ImageData
+                const tmpCanvas = document.createElement('canvas');
+                tmpCanvas.width = w;
+                tmpCanvas.height = h;
+                const tmpCtx = tmpCanvas.getContext('2d');
+                tmpCtx.drawImage(originalImg, 0, 0, w, h);
+                const originalData = tmpCtx.getImageData(0, 0, w, h).data;
+                
+                // 创建输出数组
+                const outputData = new Uint8ClampedArray(w * h * 4);
+                
+                // 遍历像素
+                for(let y = 0; y < h; y++) {
+                    for(let x = 0; x < w; x++) {
+                        const idx = (y * w + x) * 4;
+                        // 左眼(红色通道)采样点: 原图位置 x + finalOffset (向右偏移)
+                        let leftX = x + finalOffset;
+                        let rightX = x - finalOffset;
+                        // 边界限制，超出区域则取黑色(0,0,0)
+                        let leftR = 0, leftG = 0, leftB = 0;
+                        let rightR = 0, rightG = 0, rightB = 0;
+                        
+                        if(leftX >= 0 && leftX < w) {
+                            const leftIdx = (y * w + leftX) * 4;
+                            leftR = originalData[leftIdx];
+                            leftG = originalData[leftIdx+1];
+                            leftB = originalData[leftIdx+2];
+                        }
+                        if(rightX >= 0 && rightX < w) {
+                            const rightIdx = (y * w + rightX) * 4;
+                            rightR = originalData[rightIdx];
+                            rightG = originalData[rightIdx+1];
+                            rightB = originalData[rightIdx+2];
+                        }
+                        // 红蓝立体规则: 红色分量取自左眼视图的R通道；绿蓝分量取自右眼视图的G,B通道
+                        // 为了自然彩色保留，左眼贡献强度稍微融合可提升体验。严格标准：左红，右青。
+                        const finalR = leftR;
+                        const finalG = rightG;
+                        const finalB = rightB;
+                        
+                        outputData[idx] = finalR;     // R
+                        outputData[idx+1] = finalG;   // G
+                        outputData[idx+2] = finalB;   // B
+                        outputData[idx+3] = 255;      // Alpha
+                    }
+                }
+                
+                const outputImageData = new ImageData(outputData, w, h);
+                ctx.putImageData(outputImageData, 0, 0);
+                return canvas;
+            }
+            
+            // 根据当前视差比例刷新红蓝图并更新到右侧视图控制器
+            async function refreshAnaglyph() {
+                if(!originalImageRaw) {
+                    if(stereoViewer) stereoViewer.clearWithMessage('请先上传图片或加载URL');
+                    return;
+                }
+                const w = originalImageRaw.width;
+                let offsetPx = Math.floor(w * currentDisparityRatio);
+                const maxOffsetLimit = Math.min(Math.floor(w * 0.12), 90);
+                offsetPx = Math.min(offsetPx, maxOffsetLimit);
+                offsetPx = Math.max(offsetPx, 1);
+                currentOffsetPx = offsetPx;
+                
+                const anaglyphCanvas = generateAnaglyphImage(originalImageRaw, offsetPx);
+                if(anaglyphCanvas && stereoViewer) {
+                    const img = new Image();
+                    img.onload = () => {
+                        stereoViewer.setImage(img);
+                    };
+                    img.src = anaglyphCanvas.toDataURL('image/png');
+                } else if(stereoViewer) {
+                    stereoViewer.clearWithMessage('红蓝生成失败');
+                }
+            }
+            
+            // 主流程：设置原始图片
+            async function setMainImage(source, type = 'file') {
                 let img;
                 try {
                     if(type === 'file') {
@@ -240,97 +332,78 @@
                         if(!source.trim()) throw new Error('URL不能为空');
                         img = await loadImageFromSource(source, true);
                     }
-                    // 超大图片压缩
                     const limitedImg = await limitImageSize(img);
                     originalImageRaw = limitedImg;
-                    // 更新原图预览视图 (重置变换)
+                    // 更新原图预览视图
                     if(originalViewer) originalViewer.setImage(limitedImg);
-                    // 根据新的原图，生成3D立体图并更新右侧视图
-                    await generateAndUpdateStereo();
+                    // 生成红蓝立体图
+                    await refreshAnaglyph();
                 } catch(err) {
                     alert(`错误: ${err.message}`);
                     console.error(err);
                 }
             }
             
-            // 核心: 根据原图 + 当前视差系数 生成平行眼3D并排图 (返回canvas对象)
-            function generateStereoCanvas(originalImg, disparityRatio) {
-                if(!originalImg) return null;
-                const w = originalImg.width;
-                const h = originalImg.height;
-                if(w === 0 || h === 0) return null;
-                // 偏移像素限制: 最小2px, 最大不超过宽度的12% 且不超过100px 保证视觉舒适
-                let offsetPx = Math.floor(w * disparityRatio);
-                offsetPx = Math.min(offsetPx, Math.floor(w * 0.12));
-                offsetPx = Math.max(offsetPx, 2);
-                
-                // 创建并排画布 (左图+右图宽度各为w，总宽度=2w)
-                const stereoWidth = w * 2;
-                const stereoHeight = h;
-                const canvas = document.createElement('canvas');
-                canvas.width = stereoWidth;
-                canvas.height = stereoHeight;
-                const ctx = canvas.getContext('2d');
-                // 背景填充深色 (避免毛刺边缘视觉突兀)
-                ctx.fillStyle = '#10131c';
-                ctx.fillRect(0, 0, stereoWidth, stereoHeight);
-                
-                // 辅助函数: 绘制带偏移的图像 (指定目标区域起始x，及原图偏移偏移量)
-                // 绘制左半部分 (0 ~ w)  模拟左眼视角: 图像向右偏移offsetPx (即原图左侧切掉offsetPx)
-                // 支持边缘留白填充背景柔和，但保留大部分有效数据
-                // 左图: 从原图 (offsetPx,0) 开始截取宽 w-offsetPx，目标绘制在 (0,0) 到 w-offsetPx；右侧留白区域自动背景填充
-                // 更科学模拟: 分别绘制偏移 + 边缘自然
-                // 左图region偏移复制: 将原图画到左半区，位移量offsetPx (向右移)
-                ctx.save();
-                // 左半区图像偏移 (右移)
-                ctx.drawImage(originalImg, 0, 0, w, h, offsetPx, 0, w, h);
-                // 右半区图像偏移 (左移) 在右半区起始坐标 w-offsetPx
-                ctx.drawImage(originalImg, 0, 0, w, h, w - offsetPx, 0, w, h);
-                
-                // 边缘修饰: 对于左半区最左侧缺失边缘，轻微羽化直接背景；为了完善, 对左侧不足offsetPx区域保持背景，不影响整体立体融合
-                // 同样对右侧超出部分, 背景保留即可，效果已经很完整。
-                ctx.restore();
-                return canvas;
+            // 根据滑块值更新视差比例并重新生成
+            function updateDisparityFromSlider(value) {
+                // 映射 0~100 -> 偏移比例 0.02 ~ 0.11
+                const ratio = 0.02 + (value / 100) * 0.09;
+                currentDisparityRatio = Math.min(0.12, Math.max(0.02, ratio));
+                let text = '弱';
+                if(value > 35 && value <= 70) text = '中';
+                else if(value > 70) text = '强';
+                disparityValueSpan.innerText = text;
+                if(originalImageRaw) {
+                    refreshAnaglyph();
+                }
             }
             
-            // 更新立体图并刷新右侧视图 (完全重新生成3D图片)
-            async function generateAndUpdateStereo() {
+            // 重置全部状态
+            function resetEverything() {
+                originalImageRaw = null;
+                if(originalViewer) originalViewer.clearWithMessage('等待上传图片');
+                if(stereoViewer) stereoViewer.clearWithMessage('暂无立体图');
+                fileInput.value = '';
+                urlInput.value = '';
+                disparitySlider.value = '55';
+                updateDisparityFromSlider(55);
+            }
+            
+            // 下载当前红蓝立体成品图
+            function downloadAnaglyph() {
                 if(!originalImageRaw) {
-                    // 清空右侧canvas展示无图片提示
-                    if(stereoViewer) stereoViewer.clearWithMessage('请先上传图片或加载URL');
+                    alert('请先加载图片生成红蓝3D图');
                     return;
                 }
-                const stereoCanvasFull = generateStereoCanvas(originalImageRaw, currentDisparity);
-                if(stereoCanvasFull && stereoViewer) {
-                    // 将生成的canvas转换为图片对象设置给stereoViewer
-                    const img = new Image();
-                    img.onload = () => {
-                        stereoViewer.setImage(img);
-                    };
-                    img.src = stereoCanvasFull.toDataURL('image/png');
-                } else if(stereoViewer){
-                    stereoViewer.clearWithMessage('生成失败');
+                const w = originalImageRaw.width;
+                let offsetPx = Math.floor(w * currentDisparityRatio);
+                const maxOffset = Math.min(Math.floor(w * 0.12), 90);
+                offsetPx = Math.min(offsetPx, maxOffset);
+                const canvasOutput = generateAnaglyphImage(originalImageRaw, offsetPx);
+                if(canvasOutput) {
+                    const link = document.createElement('a');
+                    link.download = `anaglyph_3d_${Date.now()}.png`;
+                    link.href = canvasOutput.toDataURL('image/png');
+                    link.click();
+                } else {
+                    alert('生成失败，请重试');
                 }
             }
             
-            // ----- 视图控制系统 (支持缩放/平移/重置，每个Canvas独立)-----
+            // ---------- 视图控制器 (支持平移缩放) ----------
             class PanZoomCanvas {
                 constructor(canvasElement) {
                     this.canvas = canvasElement;
                     this.ctx = canvasElement.getContext('2d');
-                    this.image = null;        // 待绘制的图像对象
+                    this.image = null;
                     this.scale = 1.0;
                     this.offsetX = 0;
                     this.offsetY = 0;
                     this.dragging = false;
                     this.dragStartX = 0;
                     this.dragStartY = 0;
-                    this.initScale = 1;
-                    this.width = 0;
-                    this.height = 0;
                     this.setupEvents();
-                    // 绘制背景提示
-                    this.clearWithMessage('等待图片加载');
+                    this.clearWithMessage('等待图片');
                 }
                 
                 setupEvents() {
@@ -341,7 +414,6 @@
                         const mouseY = e.clientY - rect.top;
                         const delta = e.deltaY > 0 ? 0.9 : 1.1;
                         const newScale = Math.min(5, Math.max(0.5, this.scale * delta));
-                        // 计算鼠标位置缩放偏移修正
                         const scaleChange = newScale / this.scale;
                         this.offsetX = mouseX - (mouseX - this.offsetX) * scaleChange;
                         this.offsetY = mouseY - (mouseY - this.offsetY) * scaleChange;
@@ -349,7 +421,6 @@
                         this.clampOffset();
                         this.redraw();
                     };
-                    
                     const handleMouseDown = (e) => {
                         this.dragging = true;
                         this.dragStartX = e.clientX;
@@ -357,7 +428,6 @@
                         this.canvas.style.cursor = 'grabbing';
                         e.preventDefault();
                     };
-                    
                     const handleMouseMove = (e) => {
                         if(!this.dragging) return;
                         const dx = e.clientX - this.dragStartX;
@@ -369,13 +439,10 @@
                         this.clampOffset();
                         this.redraw();
                     };
-                    
                     const handleMouseUp = () => {
                         this.dragging = false;
                         this.canvas.style.cursor = 'grab';
                     };
-                    
-                    // 移动端触摸事件简单支持
                     const handleTouchStart = (e) => {
                         if(e.touches.length === 1) {
                             this.dragging = true;
@@ -409,7 +476,6 @@
                     this.canvas.addEventListener('touchmove', handleTouchMove);
                     this.canvas.addEventListener('touchend', handleTouchEnd);
                     this.canvas.style.cursor = 'grab';
-                    // 保存清理监听器占位，此处简单不提供注销，但页面单例无影响
                 }
                 
                 clampOffset() {
@@ -455,7 +521,7 @@
                     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
                     this.ctx.fillStyle = '#0F1219';
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                    this.ctx.fillStyle = '#6B7280';
+                    this.ctx.fillStyle = '#9ca3af';
                     this.ctx.font = '14px system-ui';
                     this.ctx.textAlign = 'center';
                     this.ctx.fillText(msg, this.canvas.width/2, this.canvas.height/2);
@@ -466,34 +532,27 @@
                     const rect = this.canvas.getBoundingClientRect();
                     const displayWidth = rect.width;
                     const displayHeight = rect.height;
-                    // 设置canvas实际分辨率匹配css大小 (防止模糊)
                     this.canvas.width = displayWidth;
                     this.canvas.height = displayHeight;
                     this.ctx.clearRect(0, 0, displayWidth, displayHeight);
                     this.ctx.fillStyle = '#0B0E14';
                     this.ctx.fillRect(0, 0, displayWidth, displayHeight);
                     if(!this.image) return;
-                    const imgW = this.image.width;
-                    const imgH = this.image.height;
-                    const drawW = imgW * this.scale;
-                    const drawH = imgH * this.scale;
-                    this.ctx.drawImage(this.image, 0, 0, imgW, imgH, this.offsetX, this.offsetY, drawW, drawH);
-                }
-                
-                resizeObserver() {
-                    if(this.image) this.resetView();
-                    else this.clearWithMessage('无图片');
+                    const w = this.image.width;
+                    const h = this.image.height;
+                    const drawW = w * this.scale;
+                    const drawH = h * this.scale;
+                    this.ctx.drawImage(this.image, 0, 0, w, h, this.offsetX, this.offsetY, drawW, drawH);
                 }
             }
             
-            // 初始化原图和立体图视图控制器
+            // 初始化双视图控制器
             let originalViewer = null;
             let stereoViewer = null;
             
             function initViewers() {
                 originalViewer = new PanZoomCanvas(originalCanvas);
                 stereoViewer = new PanZoomCanvas(stereoCanvas);
-                // 监听尺寸变化重置视图
                 const resizeObserver = new ResizeObserver(() => {
                     if(originalViewer) originalViewer.redraw();
                     if(stereoViewer) stereoViewer.redraw();
@@ -502,62 +561,19 @@
                 resizeObserver.observe(stereoCanvas);
             }
             
-            // 视差强度映射: 滑块 0-100 -> 比例 0.02 ~ 0.11
-            function updateDisparityFromSlider(value) {
-                const ratio = 0.02 + (value / 100) * 0.09;
-                currentDisparity = Math.min(0.12, Math.max(0.02, ratio));
-                let text = '弱';
-                if(value > 35 && value <= 70) text = '中';
-                else if(value > 70) text = '强';
-                disparityValueSpan.innerText = text;
-                if(originalImageRaw) {
-                    generateAndUpdateStereo();
-                }
-            }
-            
-            // 重置全部状态
-            function resetEverything() {
-                originalImageRaw = null;
-                if(originalViewer) originalViewer.clearWithMessage('等待上传图片');
-                if(stereoViewer) stereoViewer.clearWithMessage('无立体图');
-                fileInput.value = '';
-                urlInput.value = '';
-                disparitySlider.value = '55';
-                updateDisparityFromSlider(55);
-            }
-            
-            // 下载成品图
-            function downloadStereoImage() {
-                if(!originalImageRaw) {
-                    alert('请先加载图片生成3D效果图');
-                    return;
-                }
-                const stereoFullCanvas = generateStereoCanvas(originalImageRaw, currentDisparity);
-                if(stereoFullCanvas) {
-                    const link = document.createElement('a');
-                    link.download = `parallel_3d_${Date.now()}.png`;
-                    link.href = stereoFullCanvas.toDataURL('image/png');
-                    link.click();
-                } else {
-                    alert('生成失败，请重试');
-                }
-            }
-            
-            // 事件绑定
+            // 绑定UI事件
             fileInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if(file) {
                     const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        setMainImageFromSource(ev.target.result, 'file');
-                    };
+                    reader.onload = (ev) => setMainImage(ev.target.result, 'file');
                     reader.readAsDataURL(file);
                 }
             });
             
             loadUrlBtn.addEventListener('click', () => {
                 const url = urlInput.value.trim();
-                if(url) setMainImageFromSource(url, 'url');
+                if(url) setMainImage(url, 'url');
                 else alert('请输入图片URL');
             });
             
@@ -567,7 +583,7 @@
             });
             
             resetAllBtn.addEventListener('click', resetEverything);
-            downloadBtn.addEventListener('click', downloadStereoImage);
+            downloadBtn.addEventListener('click', downloadAnaglyph);
             resetOriginalViewBtn.addEventListener('click', () => originalViewer && originalViewer.resetView());
             reset3DViewBtn.addEventListener('click', () => stereoViewer && stereoViewer.resetView());
             
