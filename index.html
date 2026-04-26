@@ -65,7 +65,7 @@
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-8">
             <div>
                 <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-red-400 to-blue-400 bg-clip-text text-transparent">🔴🔵 红蓝立体 · Anaglyph 3D</h1>
-                <p class="text-sm text-gray-400 mt-1">支持普通照片 / SIRDS裸眼立体图｜零偏移保留原生3D</p>
+                <p class="text-sm text-gray-400 mt-1">基于视差偏移生成红蓝立体图 | 佩戴红蓝眼镜获得强烈景深感</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <button id="resetAllBtn" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm font-medium transition-smooth flex items-center gap-1 shadow-md">
@@ -104,16 +104,14 @@
                 <!-- 视差滑块 -->
                 <div>
                     <div class="flex justify-between items-center mb-1">
-                        <label class="text-sm font-medium text-gray-300">立体视差强度</label>
-                        <span id="disparityValue" class="text-xs bg-gray-800 px-2 py-0.5 rounded-full text-red-300">仅染色</span>
+                        <label class="text-sm font-medium text-gray-300">立体视差强度 (红蓝偏移)</label>
+                        <span id="disparityValue" class="text-xs bg-gray-800 px-2 py-0.5 rounded-full text-red-300">中</span>
                     </div>
-                    <input type="range" id="disparitySlider" min="0" max="100" value="0" step="1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-glow">
+                    <input type="range" id="disparitySlider" min="0" max="100" value="55" step="1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-glow">
                     <div class="flex justify-between text-[11px] text-gray-500 mt-1 px-1">
-                        <span>无偏移(适合SIRDS)</span><span>普通3D</span><span>强偏移</span>
+                        <span>弱景深</span><span>舒适立体</span><span>强冲击</span>
                     </div>
-                    <p class="text-[11px] text-gray-500 mt-2">
-                        <span class="text-green-400">0值 = 只染色不偏移</span>，完美保留轰炸机原生3D
-                    </p>
+                    <p class="text-[11px] text-gray-500 mt-2 flex items-center gap-1"><span class="w-1.5 h-1.5 bg-red-400 rounded-full"></span> 偏移越大景深越强，建议适中避免边缘重影过度</p>
                 </div>
             </div>
         </div>
@@ -154,12 +152,11 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                 </div>
                 <div class="flex-1 text-sm">
-                    <p class="font-semibold text-red-300 mb-1">🧿 观看说明：</p>
-                    <p class="text-gray-300 leading-relaxed">
-                    ① SIRDS裸眼立体图(轰炸机)：滑块拉至 <b>0</b>，仅染色无偏移，平行眼/红蓝眼镜都能看3D；<br>
-                    ② 普通照片：调高滑块产生左右视差，佩戴红蓝眼镜观看立体；<br>
-                    ③ 左红右青标准眼镜，画面更立体自然。
-                    </p>
+                    <p class="font-semibold text-red-300 mb-1">🧿 红蓝立体眼镜观看教程：</p>
+                    <p class="text-gray-300 leading-relaxed">① 佩戴标准红蓝眼镜（左红右蓝/左红右青）；<br>
+                    ② 将屏幕亮度调至舒适状态，保持眼睛平视；<br>
+                    ③ 调节上方「视差强度」滑块，直到获得鲜明、舒适不重影的立体景深；<br>
+                    ✨ 提示：对于复杂纹理图片，中等偏移量（滑块50~70）通常最佳。</p>
                 </div>
             </div>
         </div>
@@ -168,9 +165,9 @@
     <script>
         (function(){
             // ---------- 核心变量 ----------
-            let originalImageRaw = null;
-            let currentOffsetPx = 0;
-            let currentDisparityRatio = 0;
+            let originalImageRaw = null;          // 存储缩放后的原始图片（HTMLImageElement）
+            let currentOffsetPx = 0;              // 当前偏移像素值 (基于图片宽度比例计算)
+            let currentDisparityRatio = 0.055;     // 偏移比例 (0~0.12)
             
             // 大图压缩限制
             const MAX_IMAGE_DIM = 1800;
@@ -224,73 +221,82 @@
                     img.src = src;
                 });
             }
-
-            // ========== 修复后核心算法：通用红蓝Anaglyph ==========
-            // 滑块0 = 无偏移(保留SIRDS原生3D)｜滑块>0 = 普通照片左右视差偏移
-            function generateAnaglyphImage(originalImg, offsetPx) {
-    if(!originalImg) return null;
-    const w = originalImg.width;
-    const h = originalImg.height;
-    if(w === 0 || h === 0) return null;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-
-    const tmpCanvas = document.createElement('canvas');
-    tmpCanvas.width = w;
-    tmpCanvas.height = h;
-    const tmpCtx = tmpCanvas.getContext('2d');
-    tmpCtx.drawImage(originalImg, 0, 0, w, h);
-    const originalData = tmpCtx.getImageData(0, 0, w, h).data;
-
-    const outputData = new Uint8ClampedArray(w * h * 4);
-
-    let maxOffset = Math.min(Math.floor(w * 0.12), 90);
-    let finalOffset = Math.min(offsetPx, maxOffset);
-    finalOffset = Math.max(finalOffset, 0);
-
-    for(let y = 0; y < h; y++) {
-        for(let x = 0; x < w; x++) {
-            const idx = (y * w + x) * 4;
-            let leftX = x + finalOffset;
-            let rightX = x - finalOffset;
-
-            let leftR = 0, rightG = 0, rightB = 0;
-
-            // 左眼红通道采样
-            if(leftX >= 0 && leftX < w) {
-                const li = (y * w + leftX) * 4;
-                leftR = originalData[li];
-            } else {
-                leftR = 0;
-            }
-
-            // 右眼青蓝通道采样
-            if(rightX >= 0 && rightX < w) {
-                const ri = (y * w + rightX) * 4;
-                rightG = originalData[ri + 1];
-                rightB = originalData[ri + 2];
-            } else {
-                rightG = 0;
-                rightB = 0;
-            }
-
-            // 关键修复：标准红青3D公式
-            outputData[idx]   = leftR;       // 红通道只取左眼
-            outputData[idx+1] = rightG;      // 绿通道只取右眼
-            outputData[idx+2] = rightB;      // 蓝通道只取右眼
-            outputData[idx+3] = 255;        // 透明度
-        }
-    }
-
-    const outputImageData = new ImageData(outputData, w, h);
-    ctx.putImageData(outputImageData, 0, 0);
-    return canvas;
-}
             
-            // 根据当前视差比例刷新红蓝图
+            // ---------- 核心算法：生成红蓝立体图 (Anaglyph) ----------
+            // 原理：左眼视图(红色通道) 向右偏移 offsetPx； 右眼视图(青蓝色通道) 向左偏移 offsetPx；
+            // 合成最终图像：R = 左视图像素R值， G = 右视图像素G值， B = 右视图像素B值。
+            // 超出边界的部分填充黑色 (避免诡异颜色)。
+            function generateAnaglyphImage(originalImg, offsetPx) {
+                if(!originalImg) return null;
+                const w = originalImg.width;
+                const h = originalImg.height;
+                if(w === 0 || h === 0) return null;
+                
+                // 限制最大偏移不超过图片宽度的12% + 不超过80px，保证美观
+                let maxOffset = Math.min(Math.floor(w * 0.12), 90);
+                let finalOffset = Math.min(offsetPx, maxOffset);
+                finalOffset = Math.max(finalOffset, 1);
+                
+                // 创建离屏canvas，大小与原图一致
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                
+                // 为了高效合成，采用 getImageData 逐像素操作。
+                // 先获取原图完整ImageData
+                const tmpCanvas = document.createElement('canvas');
+                tmpCanvas.width = w;
+                tmpCanvas.height = h;
+                const tmpCtx = tmpCanvas.getContext('2d');
+                tmpCtx.drawImage(originalImg, 0, 0, w, h);
+                const originalData = tmpCtx.getImageData(0, 0, w, h).data;
+                
+                // 创建输出数组
+                const outputData = new Uint8ClampedArray(w * h * 4);
+                
+                // 遍历像素
+                for(let y = 0; y < h; y++) {
+                    for(let x = 0; x < w; x++) {
+                        const idx = (y * w + x) * 4;
+                        // 左眼(红色通道)采样点: 原图位置 x + finalOffset (向右偏移)
+                        let leftX = x + finalOffset;
+                        let rightX = x - finalOffset;
+                        // 边界限制，超出区域则取黑色(0,0,0)
+                        let leftR = 0, leftG = 0, leftB = 0;
+                        let rightR = 0, rightG = 0, rightB = 0;
+                        
+                        if(leftX >= 0 && leftX < w) {
+                            const leftIdx = (y * w + leftX) * 4;
+                            leftR = originalData[leftIdx];
+                            leftG = originalData[leftIdx+1];
+                            leftB = originalData[leftIdx+2];
+                        }
+                        if(rightX >= 0 && rightX < w) {
+                            const rightIdx = (y * w + rightX) * 4;
+                            rightR = originalData[rightIdx];
+                            rightG = originalData[rightIdx+1];
+                            rightB = originalData[rightIdx+2];
+                        }
+                        // 红蓝立体规则: 红色分量取自左眼视图的R通道；绿蓝分量取自右眼视图的G,B通道
+                        // 为了自然彩色保留，左眼贡献强度稍微融合可提升体验。严格标准：左红，右青。
+                        const finalR = leftR;
+                        const finalG = rightG;
+                        const finalB = rightB;
+                        
+                        outputData[idx] = finalR;     // R
+                        outputData[idx+1] = finalG;   // G
+                        outputData[idx+2] = finalB;   // B
+                        outputData[idx+3] = 255;      // Alpha
+                    }
+                }
+                
+                const outputImageData = new ImageData(outputData, w, h);
+                ctx.putImageData(outputImageData, 0, 0);
+                return canvas;
+            }
+            
+            // 根据当前视差比例刷新红蓝图并更新到右侧视图控制器
             async function refreshAnaglyph() {
                 if(!originalImageRaw) {
                     if(stereoViewer) stereoViewer.clearWithMessage('请先上传图片或加载URL');
@@ -298,6 +304,9 @@
                 }
                 const w = originalImageRaw.width;
                 let offsetPx = Math.floor(w * currentDisparityRatio);
+                const maxOffsetLimit = Math.min(Math.floor(w * 0.12), 90);
+                offsetPx = Math.min(offsetPx, maxOffsetLimit);
+                offsetPx = Math.max(offsetPx, 1);
                 currentOffsetPx = offsetPx;
                 
                 const anaglyphCanvas = generateAnaglyphImage(originalImageRaw, offsetPx);
@@ -325,7 +334,9 @@
                     }
                     const limitedImg = await limitImageSize(img);
                     originalImageRaw = limitedImg;
+                    // 更新原图预览视图
                     if(originalViewer) originalViewer.setImage(limitedImg);
+                    // 生成红蓝立体图
                     await refreshAnaglyph();
                 } catch(err) {
                     alert(`错误: ${err.message}`);
@@ -333,32 +344,32 @@
                 }
             }
             
-            // 滑块更新视差
+            // 根据滑块值更新视差比例并重新生成
             function updateDisparityFromSlider(value) {
-                // 0~100 → 0 ~ 0.09
-                const ratio = (value / 100) * 0.09;
-                currentDisparityRatio = Math.max(0, ratio);
-                let text = '仅染色';
-                if(value > 20 && value <= 60) text = '中等3D';
-                else if(value > 60) text = '强偏移';
+                // 映射 0~100 -> 偏移比例 0.02 ~ 0.11
+                const ratio = 0.02 + (value / 100) * 0.09;
+                currentDisparityRatio = Math.min(0.12, Math.max(0.02, ratio));
+                let text = '弱';
+                if(value > 35 && value <= 70) text = '中';
+                else if(value > 70) text = '强';
                 disparityValueSpan.innerText = text;
                 if(originalImageRaw) {
                     refreshAnaglyph();
                 }
             }
             
-            // 重置全部
+            // 重置全部状态
             function resetEverything() {
                 originalImageRaw = null;
                 if(originalViewer) originalViewer.clearWithMessage('等待上传图片');
                 if(stereoViewer) stereoViewer.clearWithMessage('暂无立体图');
                 fileInput.value = '';
                 urlInput.value = '';
-                disparitySlider.value = '0';
-                updateDisparityFromSlider(0);
+                disparitySlider.value = '55';
+                updateDisparityFromSlider(55);
             }
             
-            // 下载
+            // 下载当前红蓝立体成品图
             function downloadAnaglyph() {
                 if(!originalImageRaw) {
                     alert('请先加载图片生成红蓝3D图');
@@ -366,6 +377,8 @@
                 }
                 const w = originalImageRaw.width;
                 let offsetPx = Math.floor(w * currentDisparityRatio);
+                const maxOffset = Math.min(Math.floor(w * 0.12), 90);
+                offsetPx = Math.min(offsetPx, maxOffset);
                 const canvasOutput = generateAnaglyphImage(originalImageRaw, offsetPx);
                 if(canvasOutput) {
                     const link = document.createElement('a');
@@ -377,7 +390,7 @@
                 }
             }
             
-            // ---------- 视图控制器 (平移缩放) ----------
+            // ---------- 视图控制器 (支持平移缩放) ----------
             class PanZoomCanvas {
                 constructor(canvasElement) {
                     this.canvas = canvasElement;
@@ -447,6 +460,7 @@
                             this.dragStartX = e.touches[0].clientX;
                             this.dragStartY = e.touches[0].clientY;
                             this.clampOffset();
+                            this.redraw();
                             e.preventDefault();
                         }
                     };
@@ -532,7 +546,7 @@
                 }
             }
             
-            // 初始化双视图
+            // 初始化双视图控制器
             let originalViewer = null;
             let stereoViewer = null;
             
@@ -547,7 +561,7 @@
                 resizeObserver.observe(stereoCanvas);
             }
             
-            // 绑定事件
+            // 绑定UI事件
             fileInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if(file) {
