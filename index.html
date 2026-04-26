@@ -7,7 +7,6 @@
     <style>
         * {
             box-sizing: border-box;
-            user-select: none;
         }
         body {
             background: linear-gradient(145deg, #1a2634 0%, #0f1722 100%);
@@ -27,7 +26,6 @@
             border-radius: 48px;
             box-shadow: 0 25px 45px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
             padding: 24px 28px 36px;
-            transition: all 0.2s;
         }
         h1 {
             font-size: 1.85rem;
@@ -37,7 +35,6 @@
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
-            letter-spacing: -0.3px;
             display: inline-flex;
             align-items: center;
             gap: 12px;
@@ -48,7 +45,6 @@
             color: #b9e2ff;
             padding: 4px 12px;
             border-radius: 60px;
-            font-weight: normal;
         }
         .sub {
             color: #9aaebf;
@@ -61,7 +57,7 @@
             background: rgba(10, 18, 28, 0.6);
             border: 2px dashed #3e5568;
             border-radius: 32px;
-            padding: 20px 20px;
+            padding: 20px;
             text-align: center;
             cursor: pointer;
             transition: 0.2s;
@@ -126,7 +122,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 28px;
-            margin: 20px 0 20px;
+            margin: 20px 0;
         }
         .card {
             background: #10181fcc;
@@ -251,6 +247,10 @@
             font-size: 0.75rem;
             margin-top: 5px;
         }
+        .disabled-control {
+            opacity: 0.5;
+            pointer-events: none;
+        }
         @media (max-width: 780px) {
             .control-group {
                 flex-direction: column;
@@ -270,14 +270,13 @@
     <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap;">
         <h1>
             👁️ ParallelView · 平行眼3D
-            <small>本地+URL</small>
+            <small>本地+URL(IMG标签)</small>
         </h1>
     </div>
     <div class="sub">
-        上传左右并排平行眼3D照片 或 输入图片网址 → 生成可调间距的立体视图｜用平行眼技法感受裸眼3D！
+        上传本地左右并排图 ✔️ 或 输入图片网址 (原图用&lt;img&gt;显示, 若支持CORS则自动生成增强视图)
     </div>
 
-    <!-- 本地上传区域 -->
     <div class="upload-area" id="uploadArea">
         <div class="upload-icon">📁📸</div>
         <div class="upload-hint">点击或拖拽上传本地平行眼图片 (JPG/PNG/WEBP)</div>
@@ -285,58 +284,55 @@
         <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,image/jpg" class="file-input">
     </div>
 
-    <!-- 线上URL加载区域 -->
     <div class="url-section">
-        <input type="text" id="imageUrlInput" class="url-input" placeholder="https:// 或 http:// 线上图片地址 (平行眼并排图)" autocomplete="off">
+        <input type="text" id="imageUrlInput" class="url-input" placeholder="https:// 或 http:// 线上图片地址 (原图会直接以img标签显示)" autocomplete="off">
         <button id="loadUrlBtn" class="url-btn">🌐 加载URL图片</button>
         <button id="clearUrlBtn" class="url-btn" style="background:#3a4e62;">清空URL</button>
     </div>
 
-    <!-- 双卡展示区 -->
     <div class="preview-section">
         <div class="card">
-            <h3>📌 原始并排图</h3>
+            <h3>📌 原始并排图 (img标签)</h3>
             <div class="image-box" id="originalBox">
-                <div style="color:#70869b; text-align:center;">等待上传或输入URL<br>⬆️ 点击上方区域/粘贴链接</div>
+                <div style="color:#70869b; text-align:center;">等待上传或输入URL</div>
             </div>
-            <div style="margin-top: 10px; font-size:0.7rem; text-align:center;">平行眼直接观看原图需训练</div>
+            <div style="margin-top: 10px; font-size:0.7rem; text-align:center;">直接使用&lt;img&gt;显示，无跨域限制</div>
         </div>
         <div class="card">
             <h3>✨ 平行眼增强视图</h3>
             <div class="image-box" id="enhancedBox">
                 <canvas id="stereoCanvas" style="width:100%; background:#0a1015; border-radius:16px;"></canvas>
             </div>
-            <div class="control-group">
+            <div class="control-group" id="controlsGroup">
                 <div class="slider-label">
                     <span>👁️ 左右图间距</span>
-                    <input type="range" id="gapSlider" min="-80" max="120" value="12" step="1">
+                    <input type="range" id="gapSlider" min="-80" max="120" value="12" step="1" disabled>
                     <span id="gapValue">12px</span>
                 </div>
                 <div class="slider-label">
                     <span>📐 辅助线强度</span>
-                    <input type="range" id="guideOpacitySlider" min="0" max="100" value="40" step="1">
+                    <input type="range" id="guideOpacitySlider" min="0" max="100" value="40" step="1" disabled>
                     <span id="guideValue">40%</span>
                 </div>
-                <button id="resetViewBtn" class="btn-reset">⟳ 重置间距</button>
+                <button id="resetViewBtn" class="btn-reset" disabled>⟳ 重置间距</button>
             </div>
-            <div style="font-size:0.7rem; text-align:center; margin-top:8px;">调整间距+辅助线，帮助双眼融合 → 立体浮现</div>
+            <div id="enhanceStatusMsg" style="font-size:0.7rem; text-align:center; margin-top:8px; color:#ffb347;"></div>
         </div>
     </div>
 
     <div class="info-tip">
-        <div style="font-weight:600;">🧠 平行眼技巧 + URL使用注意</div>
+        <div style="font-weight:600;">📌 关于线上URL图片</div>
         <div class="guide-step">
-            <span>🔹 视线平行看向远处，让左右图重叠</span>
-            <span>🔹 URL图片需支持跨域(CORS)？一般能显示即可绘制</span>
-            <span>🔹 若图片加载失败，检查网络或图片地址</span>
+            <span>🔹 原图区域会使用 &lt;img&gt; 标签正常显示 (无CORS问题)</span>
+            <span>🔹 增强视图需要读取图像像素，若图片服务器支持CORS或同源，则可正常生效</span>
+            <span>🔹 若不支持CORS，增强视图无法生成，请下载图片后使用「本地上传」</span>
         </div>
-        <div style="margin-top:8px;"><span class="badge">💡 进阶</span> 调整间距可补偿瞳距差异，白线/圆点帮助对焦</div>
     </div>
-    <footer>⚡ ParallelView · 支持本地/远程图片，裸眼3D平行眼利器</footer>
+    <footer>⚡ ParallelView · 本地/URL双支持 | URL原图用img标签展示，增强视图尽力而为</footer>
 </div>
 
 <script>
-    (function() {
+    (function(){
         // DOM 元素
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
@@ -350,36 +346,43 @@
         const imageUrlInput = document.getElementById('imageUrlInput');
         const loadUrlBtn = document.getElementById('loadUrlBtn');
         const clearUrlBtn = document.getElementById('clearUrlBtn');
+        const enhanceStatusMsg = document.getElementById('enhanceStatusMsg');
+        const controlsGroup = document.getElementById('controlsGroup');
 
-        // 图片数据状态
-        let originalImgBitmap = null;      // 位图数据
+        // 状态变量
+        let originalImgBitmap = null;      // 用于增强视图的位图
         let imgWidth = 0, imgHeight = 0;
-        let currentSource = null;           // 'file' or 'url' 用于标记
+        let currentMode = null;            // 'file', 'url_success', 'url_fallback'
         let gapPx = 12;
         let guideOpacity = 0.4;
+        let controlsEnabled = false;        // 控件是否可用
 
-        // 辅助函数 - 清空原图框并展示占位
-        function showPlaceholderInOriginal(text = '暂无图片') {
-            originalBox.innerHTML = '';
-            const placeholderDiv = document.createElement('div');
-            placeholderDiv.style.color = '#70869b';
-            placeholderDiv.style.textAlign = 'center';
-            placeholderDiv.style.padding = '20px';
-            placeholderDiv.innerText = text;
-            originalBox.appendChild(placeholderDiv);
+        // 启用/禁用控件
+        function setControlsEnabled(enabled) {
+            controlsEnabled = enabled;
+            gapSlider.disabled = !enabled;
+            guideOpacitySlider.disabled = !enabled;
+            resetBtn.disabled = !enabled;
+            if (enabled) {
+                controlsGroup.classList.remove('disabled-control');
+            } else {
+                controlsGroup.classList.add('disabled-control');
+            }
         }
 
-        // 绘制增强视图 (核心平行眼优化)
+        // 绘制增强视图 (仅在originalImgBitmap存在且控件启用时调用)
         function drawEnhancedView() {
-            if (!originalImgBitmap || imgWidth === 0 || imgHeight === 0) {
+            if (!controlsEnabled || !originalImgBitmap || imgWidth === 0 || imgHeight === 0) {
+                // 显示占位或错误信息
                 const ctx = stereoCanvas.getContext('2d');
-                ctx.clearRect(0, 0, stereoCanvas.width, stereoCanvas.height);
+                ctx.clearRect(0, 0, stereoCanvas.width || 300, stereoCanvas.height || 200);
                 ctx.fillStyle = '#0a1015';
                 ctx.fillRect(0, 0, stereoCanvas.width || 300, stereoCanvas.height || 200);
                 ctx.fillStyle = '#70869b';
                 ctx.font = '14px system-ui';
                 ctx.textAlign = 'center';
-                ctx.fillText('等待加载平行眼图片', (stereoCanvas.width || 300)/2, (stereoCanvas.height || 200)/2);
+                let msg = controlsEnabled ? '等待图片数据...' : (currentMode === 'url_fallback' ? '⚠️ 跨域限制，无法生成增强视图' : '请上传本地图片或使用支持CORS的URL');
+                ctx.fillText(msg, (stereoCanvas.width || 300)/2, (stereoCanvas.height || 200)/2);
                 return;
             }
 
@@ -410,13 +413,11 @@
             let startX = (displayWidth - (totalImgWidth + actualGap)) / 2;
             if (startX < 2) startX = 4;
 
-            // 绘制左半和右半
             try {
                 ctx.drawImage(originalImgBitmap, 0, 0, leftImgW, leftImgH, startX, 0, leftDrawWidth, displayHeight);
                 const rightStartX = startX + leftDrawWidth + actualGap;
                 ctx.drawImage(originalImgBitmap, halfWidth, 0, rightImgW, rightImgH, rightStartX, 0, rightDrawWidth, displayHeight);
 
-                // 辅助线 (透明度依据guideOpacity)
                 if (guideOpacity > 0.01) {
                     ctx.save();
                     ctx.globalAlpha = Math.min(0.8, guideOpacity);
@@ -450,156 +451,157 @@
                 }
                 ctx.font = '12px monospace';
                 ctx.fillStyle = '#eef4ffaa';
-                ctx.fillText(`间隙:${gapPx}px`, 8, 20);
-            } catch(e) { console.warn(e); }
-        }
-
-        // 通用图片加载 (从Image元素生成位图)
-        async function loadImageFromElement(imgElement, sourceDesc = '图片') {
-            return new Promise((resolve, reject) => {
-                if (!imgElement.complete) {
-                    imgElement.onload = async () => {
-                        try {
-                            const bitmap = await createImageBitmap(imgElement);
-                            resolve({ bitmap, width: imgElement.width, height: imgElement.height });
-                        } catch(e) { reject(e); }
-                    };
-                    imgElement.onerror = () => reject(new Error(`加载失败: ${sourceDesc}`));
-                } else {
-                    // 已经complete
-                    (async () => {
-                        try {
-                            const bitmap = await createImageBitmap(imgElement);
-                            resolve({ bitmap, width: imgElement.width, height: imgElement.height });
-                        } catch(e) { reject(e); }
-                    })();
-                }
-            });
-        }
-
-        // 显示原图到原始框
-        function displayOriginalImage(imgUrlOrElement, isUrl = false, elementToShow = null) {
-            originalBox.innerHTML = '';
-            if (elementToShow && elementToShow.tagName === 'IMG') {
-                const cloneImg = elementToShow.cloneNode(true);
-                cloneImg.style.maxWidth = '100%';
-                cloneImg.style.borderRadius = '16px';
-                originalBox.appendChild(cloneImg);
-            } else if (typeof imgUrlOrElement === 'string') {
-                const img = document.createElement('img');
-                img.src = imgUrlOrElement;
-                img.style.maxWidth = '100%';
-                img.style.borderRadius = '16px';
-                img.onerror = () => { img.alt = '加载失败'; };
-                originalBox.appendChild(img);
+                ctx.fillText(`间距:${gapPx}px`, 8, 20);
+            } catch(e) {
+                console.warn(e);
+                enhanceStatusMsg.innerText = '绘制出错，可能原图不符规范';
             }
         }
 
-        // 核心：设置图片位图数据并更新视图
-        async function setImageBitmap(bitmap, width, height, previewUrl = null, previewElement = null) {
+        // 清除现有位图
+        function releaseBitmap() {
             if (originalImgBitmap) {
-                originalImgBitmap.close?.(); // 便于内存
+                originalImgBitmap.close?.();
+                originalImgBitmap = null;
             }
-            originalImgBitmap = bitmap;
-            imgWidth = width;
-            imgHeight = height;
-            if (imgWidth % 2 !== 0) {
-                const warnDiv = document.createElement('div');
-                warnDiv.className = 'error-msg';
-                warnDiv.style.marginTop = '6px';
-                warnDiv.innerText = '⚠️ 图片宽度为奇数，左右分割可能偏移，建议使用偶数宽图片';
-                originalBox.appendChild(warnDiv);
-                setTimeout(() => warnDiv.remove(), 3000);
-            }
-            drawEnhancedView();
         }
 
-        // 处理文件对象 (File)
+        // 本地上传处理 (全功能)
         async function handleFile(file) {
             if (!file || !file.type.startsWith('image/')) {
                 alert('请选择图片文件');
-                return false;
+                return;
             }
             const objectURL = URL.createObjectURL(file);
             const imgElement = new Image();
             imgElement.src = objectURL;
             try {
-                const { bitmap, width, height } = await loadImageFromElement(imgElement, file.name);
-                // 展示原图
+                const bitmap = await createImageBitmap(imgElement);
+                releaseBitmap();
+                originalImgBitmap = bitmap;
+                imgWidth = imgElement.width;
+                imgHeight = imgElement.height;
+                // 显示原图
                 originalBox.innerHTML = '';
                 const displayImg = document.createElement('img');
                 displayImg.src = objectURL;
                 displayImg.style.maxWidth = '100%';
                 displayImg.style.borderRadius = '16px';
                 originalBox.appendChild(displayImg);
-                await setImageBitmap(bitmap, width, height, objectURL);
+                setControlsEnabled(true);
+                currentMode = 'file';
+                enhanceStatusMsg.innerText = '✅ 本地上传成功，增强视图可用';
+                drawEnhancedView();
                 URL.revokeObjectURL(objectURL);
-                currentSource = 'file';
-                return true;
             } catch(err) {
                 console.error(err);
-                showPlaceholderInOriginal('文件加载失败，请重试');
-                URL.revokeObjectURL(objectURL);
-                return false;
+                originalBox.innerHTML = '<div style="color:#ff8a7a;">文件加载失败</div>';
+                setControlsEnabled(false);
+                enhanceStatusMsg.innerText = '❌ 图片加载失败';
             }
         }
 
-        // 处理URL字符串
-        async function handleUrl(imageUrl) {
-            if (!imageUrl || (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://'))) {
-                alert('请输入有效的http://或https://图片地址');
-                return false;
+        // URL 加载: 始终先用 img 标签显示原图，再尝试获取位图用于增强视图
+        async function handleUrl(url) {
+            if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
+                alert('请输入有效的 http:// 或 https:// 图片地址');
+                return;
             }
-            // 显示加载中占位
-            showPlaceholderInOriginal('⏳ 正在加载远程图片...');
-            // 创建img元素并设置crossOrigin为anonymous尝试避免跨域阻断(不影响绘制，但若CORS受限canvas标记污染但可显示)
-            const img = new Image();
-            img.crossOrigin = 'Anonymous';
-            img.src = imageUrl;
-            // 超时处理
+            // 1. 直接在原始区域显示 img 标签 (无CORS限制)
+            originalBox.innerHTML = '';
+            const rawImg = document.createElement('img');
+            rawImg.src = url;
+            rawImg.style.maxWidth = '100%';
+            rawImg.style.borderRadius = '16px';
+            rawImg.alt = 'online image';
+            rawImg.onerror = () => {
+                rawImg.alt = '加载失败';
+                originalBox.innerHTML = '<div style="color:#ff8a7a;">❌ 图片加载失败，请检查URL</div>';
+            };
+            originalBox.appendChild(rawImg);
+
+            // 2. 尝试以 crossOrigin 方式获取图像数据（供canvas增强使用）
+            enhanceStatusMsg.innerText = '⏳ 正在尝试获取图像数据以生成增强视图...';
+            setControlsEnabled(false); // 先禁用，等成功再启用
+
+            const testImg = new Image();
+            testImg.crossOrigin = 'Anonymous';
+            testImg.src = url;
+            // 超时保护
             const timeoutId = setTimeout(() => {
-                if (!img.complete) {
-                    img.onerror?.();
+                if (!testImg.complete) {
+                    testImg.onerror?.();
                 }
-            }, 15000);
+            }, 10000);
+
             try {
-                const { bitmap, width, height } = await loadImageFromElement(img, 'URL图片');
+                await new Promise((resolve, reject) => {
+                    testImg.onload = resolve;
+                    testImg.onerror = () => reject(new Error('图片加载失败(可能CORS或网络问题)'));
+                });
                 clearTimeout(timeoutId);
-                // 展示原图
-                originalBox.innerHTML = '';
-                const showImg = document.createElement('img');
-                showImg.src = imageUrl;
-                showImg.style.maxWidth = '100%';
-                showImg.style.borderRadius = '16px';
-                showImg.onerror = () => { showImg.alt = '预览失败'; };
-                originalBox.appendChild(showImg);
-                await setImageBitmap(bitmap, width, height, imageUrl);
-                currentSource = 'url';
-                return true;
-            } catch(err) {
+                // 成功获取图片 (但可能仍因CORS无法读取像素？创建ImageBitmap会检查)
+                const bitmap = await createImageBitmap(testImg);
+                releaseBitmap();
+                originalImgBitmap = bitmap;
+                imgWidth = testImg.width;
+                imgHeight = testImg.height;
+                setControlsEnabled(true);
+                currentMode = 'url_success';
+                enhanceStatusMsg.innerText = '✅ URL图片支持CORS，增强视图已启用！可调节间距和辅助线。';
+                drawEnhancedView();
+            } catch (err) {
                 clearTimeout(timeoutId);
-                console.error(err);
-                showPlaceholderInOriginal(`❌ 加载URL失败: ${err.message || '网络/跨域问题'}`);
-                return false;
+                console.warn('无法获取增强视图所需图像数据:', err);
+                releaseBitmap();
+                setControlsEnabled(false);
+                currentMode = 'url_fallback';
+                enhanceStatusMsg.innerHTML = '⚠️ 该图片服务器不支持CORS，无法生成增强视图。<br>建议「下载图片后使用本地上传」获得完整3D调节功能。';
+                // 绘制一个提示画面
+                const ctx = stereoCanvas.getContext('2d');
+                stereoCanvas.width = 400;
+                stereoCanvas.height = 260;
+                ctx.fillStyle = '#0a1015';
+                ctx.fillRect(0, 0, 400, 260);
+                ctx.fillStyle = '#ffb347';
+                ctx.font = '12px system-ui';
+                ctx.textAlign = 'center';
+                ctx.fillText('跨域限制，无法生成立体增强视图', 200, 130);
+                ctx.fillStyle = '#9aaebf';
+                ctx.fillText('请使用本地上传功能', 200, 160);
             }
         }
 
         // 重置间距
         function resetGap() {
+            if (!controlsEnabled) return;
             gapSlider.value = '12';
             gapPx = 12;
             gapValueSpan.innerText = '12px';
             drawEnhancedView();
         }
 
-        // 监听上传区文件
+        // 滑块事件
+        gapSlider.addEventListener('input', (e) => {
+            if (!controlsEnabled) return;
+            gapPx = parseInt(e.target.value, 10);
+            gapValueSpan.innerText = gapPx + 'px';
+            drawEnhancedView();
+        });
+        guideOpacitySlider.addEventListener('input', (e) => {
+            if (!controlsEnabled) return;
+            let val = parseInt(e.target.value, 10);
+            guideValueSpan.innerText = val + '%';
+            guideOpacity = val / 100;
+            drawEnhancedView();
+        });
+        resetBtn.addEventListener('click', resetGap);
+
+        // 本地上传交互
         uploadArea.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) {
-                handleFile(e.target.files[0]);
-            }
+            if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
         });
-        // 拖拽
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadArea.style.borderColor = '#2c9bff';
@@ -611,11 +613,8 @@
             e.preventDefault();
             uploadArea.style.borderColor = '#3e5568';
             const files = e.dataTransfer.files;
-            if (files.length && files[0].type.startsWith('image/')) {
-                handleFile(files[0]);
-            } else {
-                alert('请拖入图片文件');
-            }
+            if (files.length && files[0].type.startsWith('image/')) handleFile(files[0]);
+            else alert('请拖入图片文件');
         });
 
         // URL加载
@@ -626,43 +625,25 @@
         });
         clearUrlBtn.addEventListener('click', () => {
             imageUrlInput.value = '';
-            // 不清除当前图片，仅清空输入框
+            // 不清除当前显示，只清空输入框
         });
-        // 可选: 回车加载
         imageUrlInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                loadUrlBtn.click();
-            }
+            if (e.key === 'Enter') loadUrlBtn.click();
         });
 
-        // 滑块事件
-        gapSlider.addEventListener('input', (e) => {
-            gapPx = parseInt(e.target.value, 10);
-            gapValueSpan.innerText = gapPx + 'px';
-            drawEnhancedView();
-        });
-        guideOpacitySlider.addEventListener('input', (e) => {
-            let val = parseInt(e.target.value, 10);
-            guideValueSpan.innerText = val + '%';
-            guideOpacity = val / 100;
-            drawEnhancedView();
-        });
-        resetBtn.addEventListener('click', resetGap);
-
-        window.addEventListener('resize', () => { if (originalImgBitmap) drawEnhancedView(); });
-        const resizeObserver = new ResizeObserver(() => { if (originalImgBitmap) drawEnhancedView(); });
+        window.addEventListener('resize', () => { if (controlsEnabled && originalImgBitmap) drawEnhancedView(); });
+        const resizeObserver = new ResizeObserver(() => { if (controlsEnabled && originalImgBitmap) drawEnhancedView(); });
         resizeObserver.observe(document.getElementById('enhancedBox'));
 
-        // 初始化占位canvas
+        // 初始空白canvas
         const initCtx = stereoCanvas.getContext('2d');
         stereoCanvas.width = 400;
         stereoCanvas.height = 260;
         initCtx.fillStyle = '#0a1015';
         initCtx.fillRect(0, 0, 400, 260);
         initCtx.fillStyle = '#aac9e0';
-        initCtx.fillText('等待平行眼图片', 150, 130);
-        showPlaceholderInOriginal('等待上传或输入URL');
+        initCtx.fillText('等待图片', 180, 130);
+        setControlsEnabled(false);
     })();
 </script>
 </body>
