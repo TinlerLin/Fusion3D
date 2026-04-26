@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>ParallelView · 平行眼3D图片助手 | 本地/URL双支持</title>
+    <title>ParallelView · 立体融合器 | 红蓝3D + 摆动动画</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,24 +13,20 @@
             font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, 'Roboto', sans-serif;
             margin: 0;
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
         }
         .app-container {
             max-width: 1400px;
-            width: 100%;
+            margin: 0 auto;
             background: rgba(22, 28, 38, 0.75);
             backdrop-filter: blur(12px);
             border-radius: 48px;
-            box-shadow: 0 25px 45px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
             padding: 24px 28px 36px;
         }
         h1 {
             font-size: 1.85rem;
             font-weight: 600;
-            margin: 0 0 6px 0;
+            margin: 0 0 6px;
             background: linear-gradient(135deg, #E9F1FF, #88D0FF);
             background-clip: text;
             -webkit-background-clip: text;
@@ -40,18 +36,17 @@
             gap: 12px;
         }
         h1 small {
-            font-size: 0.75rem;
             background: #2c3e4e;
             color: #b9e2ff;
             padding: 4px 12px;
             border-radius: 60px;
+            font-size: 0.75rem;
         }
         .sub {
             color: #9aaebf;
             margin-bottom: 28px;
             border-left: 3px solid #2c9bff;
             padding-left: 16px;
-            font-size: 0.95rem;
         }
         .upload-area {
             background: rgba(10, 18, 28, 0.6);
@@ -67,14 +62,6 @@
             border-color: #2c9bff;
             background: rgba(44, 155, 255, 0.08);
         }
-        .upload-icon {
-            font-size: 38px;
-            margin-bottom: 6px;
-        }
-        .upload-hint {
-            color: #bfd6e8;
-            font-weight: 500;
-        }
         .url-section {
             background: #07121acc;
             border-radius: 28px;
@@ -82,9 +69,8 @@
             margin-bottom: 20px;
             display: flex;
             flex-wrap: wrap;
-            align-items: center;
             gap: 12px;
-            border: 1px solid #2e4a62;
+            align-items: center;
         }
         .url-input {
             flex: 3;
@@ -93,12 +79,7 @@
             border-radius: 60px;
             padding: 12px 18px;
             color: white;
-            font-size: 0.9rem;
-            outline: none;
             font-family: monospace;
-        }
-        .url-input:focus {
-            border-color: #2c9bff;
         }
         .url-btn {
             background: #1f6392;
@@ -108,16 +89,8 @@
             color: white;
             font-weight: bold;
             cursor: pointer;
-            transition: 0.2s;
-            font-size: 0.9rem;
         }
-        .url-btn:hover {
-            background: #2c9bff;
-            transform: scale(0.97);
-        }
-        .file-input {
-            display: none;
-        }
+        .file-input { display: none; }
         .preview-section {
             display: flex;
             flex-wrap: wrap;
@@ -131,81 +104,59 @@
             padding: 18px;
             flex: 1;
             min-width: 260px;
-            border: 1px solid rgba(72, 99, 118, 0.5);
         }
         .card h3 {
-            margin: 0 0 12px 0;
-            font-size: 1.2rem;
-            font-weight: 500;
+            margin: 0 0 12px;
             color: #cce5ff;
             display: flex;
-            align-items: center;
             gap: 8px;
+            align-items: center;
         }
         .image-box {
             background: #03090f;
             border-radius: 20px;
+            padding: 12px;
+            min-height: 280px;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: auto;
-            padding: 12px;
-            min-height: 280px;
-            position: relative;
         }
         img, canvas {
             max-width: 100%;
             border-radius: 16px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-            display: block;
-            margin: 0 auto;
         }
-        .control-group {
+        .control-bar {
             margin-top: 18px;
             display: flex;
             flex-wrap: wrap;
-            align-items: center;
-            gap: 18px;
-            background: #07101670;
-            padding: 12px 16px;
-            border-radius: 60px;
-        }
-        .slider-label {
-            display: flex;
-            align-items: center;
             gap: 12px;
-            flex: 2;
-            min-width: 160px;
-            color: #c0d4e8;
-            font-weight: 500;
+            justify-content: center;
         }
-        input[type="range"] {
-            flex: 1;
-            height: 4px;
-            -webkit-appearance: none;
-            background: #2f4b62;
-            border-radius: 4px;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
+        .btn-primary {
             background: #2c9bff;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-        .btn-reset {
-            background: #2c3e4e;
             border: none;
             padding: 8px 20px;
             border-radius: 40px;
             color: white;
-            font-weight: 500;
+            font-weight: bold;
             cursor: pointer;
-            transition: 0.2s;
         }
-        .btn-reset:hover {
-            background: #1e6faf;
+        .btn-secondary {
+            background: #3a4e62;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            color: white;
+            cursor: pointer;
+        }
+        .slider-group {
+            background: #07101670;
+            padding: 8px 16px;
+            border-radius: 40px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
         }
         .info-tip {
             background: #071824b3;
@@ -216,482 +167,382 @@
             color: #bcd3e6;
             border-left: 4px solid #2c9bff;
         }
-        .guide-step {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px 24px;
-            margin-top: 8px;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .badge {
-            background: #1a4b6e;
-            border-radius: 40px;
-            padding: 4px 14px;
-            font-family: monospace;
-        }
         footer {
             text-align: center;
             margin-top: 28px;
             font-size: 0.7rem;
             opacity: 0.6;
-            color: #8aaec0;
         }
-        .warning-text {
+        .status-msg {
+            font-size: 0.7rem;
+            margin-top: 8px;
             color: #ffb347;
-            font-size: 0.75rem;
-            margin-top: 6px;
-        }
-        .error-msg {
-            color: #ff8a7a;
-            font-size: 0.75rem;
-            margin-top: 5px;
-        }
-        .disabled-control {
-            opacity: 0.5;
-            pointer-events: none;
+            text-align: center;
         }
         @media (max-width: 780px) {
-            .control-group {
-                flex-direction: column;
-                border-radius: 28px;
-            }
-            .url-section {
-                flex-direction: column;
-            }
-            .url-btn {
-                width: 100%;
-            }
+            .url-section { flex-direction: column; }
+            .control-bar { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
 <body>
 <div class="app-container">
-    <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap;">
-        <h1>
-            👁️ ParallelView · 平行眼3D
-            <small>本地+URL(IMG标签)</small>
-        </h1>
-    </div>
-    <div class="sub">
-        上传本地左右并排图 ✔️ 或 输入图片网址 (原图用&lt;img&gt;显示, 若支持CORS则自动生成增强视图)
-    </div>
+    <h1>🧬 ParallelView · 立体融合器 <small>红蓝3D + 摆动动画</small></h1>
+    <div class="sub">上传左右并排平行眼图片 → 一键生成“融合立体效果图”（无需自己平行眼）</div>
 
     <div class="upload-area" id="uploadArea">
         <div class="upload-icon">📁📸</div>
-        <div class="upload-hint">点击或拖拽上传本地平行眼图片 (JPG/PNG/WEBP)</div>
-        <div class="warning-text">建议图片宽度为偶数，左右并排格式</div>
-        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,image/jpg" class="file-input">
+        <div class="upload-hint">点击或拖拽上传本地图片 (JPG/PNG/WEBP)</div>
+        <div class="warning-text" style="font-size:0.7rem;">建议图片宽度为偶数，左右并排格式</div>
+        <input type="file" id="fileInput" accept="image/*">
     </div>
 
     <div class="url-section">
-        <input type="text" id="imageUrlInput" class="url-input" placeholder="https:// 或 http:// 线上图片地址 (原图会直接以img标签显示)" autocomplete="off">
+        <input type="text" id="imageUrlInput" class="url-input" placeholder="https:// 线上图片地址 (跨域图片只能显示原图，不能融合)">
         <button id="loadUrlBtn" class="url-btn">🌐 加载URL图片</button>
-        <button id="clearUrlBtn" class="url-btn" style="background:#3a4e62;">清空URL</button>
+        <button id="clearUrlBtn" class="url-btn" style="background:#3a4e62;">清空</button>
     </div>
 
     <div class="preview-section">
         <div class="card">
-            <h3>📌 原始并排图 (img标签)</h3>
+            <h3>📌 原始并排图</h3>
             <div class="image-box" id="originalBox">
-                <div style="color:#70869b; text-align:center;">等待上传或输入URL</div>
+                <div style="color:#70869b;">等待图片...</div>
             </div>
-            <div style="margin-top: 10px; font-size:0.7rem; text-align:center;">直接使用&lt;img&gt;显示，无跨域限制</div>
         </div>
         <div class="card">
-            <h3>✨ 平行眼增强视图</h3>
-            <div class="image-box" id="enhancedBox">
-                <canvas id="stereoCanvas" style="width:100%; background:#0a1015; border-radius:16px;"></canvas>
+            <h3>✨ 立体融合效果图 (直接看出3D)</h3>
+            <div class="image-box" id="resultBox">
+                <canvas id="resultCanvas" style="width:100%; background:#0a1015; border-radius:16px;"></canvas>
             </div>
-            <div class="control-group" id="controlsGroup">
-                <div class="slider-label">
-                    <span>👁️ 左右图间距</span>
-                    <input type="range" id="gapSlider" min="-80" max="120" value="12" step="1" disabled>
-                    <span id="gapValue">12px</span>
+            <div class="control-bar">
+                <button id="makeAnaglyphBtn" class="btn-primary" disabled>🎨 生成红蓝立体图</button>
+                <button id="makeWiggleBtn" class="btn-secondary" disabled>🌀 生成摆动动画</button>
+                <div class="slider-group">
+                    <span>👁️ 视差调节</span>
+                    <input type="range" id="disparitySlider" min="-30" max="30" value="0" step="1" disabled>
+                    <span id="disparityVal">0</span>
                 </div>
-                <div class="slider-label">
-                    <span>📐 辅助线强度</span>
-                    <input type="range" id="guideOpacitySlider" min="0" max="100" value="40" step="1" disabled>
-                    <span id="guideValue">40%</span>
-                </div>
-                <button id="resetViewBtn" class="btn-reset" disabled>⟳ 重置间距</button>
             </div>
-            <div id="enhanceStatusMsg" style="font-size:0.7rem; text-align:center; margin-top:8px; color:#ffb347;"></div>
+            <div id="resultStatus" class="status-msg"></div>
         </div>
     </div>
 
     <div class="info-tip">
-        <div style="font-weight:600;">📌 关于线上URL图片</div>
-        <div class="guide-step">
-            <span>🔹 原图区域会使用 &lt;img&gt; 标签正常显示 (无CORS问题)</span>
-            <span>🔹 增强视图需要读取图像像素，若图片服务器支持CORS或同源，则可正常生效</span>
-            <span>🔹 若不支持CORS，增强视图无法生成，请下载图片后使用「本地上传」</span>
-        </div>
+        <strong>📌 使用说明</strong><br>
+        • 本地图片：上传后点击「生成红蓝立体图」即可得到红蓝3D效果（佩戴红蓝眼镜观看）<br>
+        • 也可点击「生成摆动动画」：左右图交替闪烁，产生无需眼镜的伪立体感<br>
+        • 视差调节：可微调左右图对齐距离（红蓝图更舒适）<br>
+        • 跨域URL图片：只能显示原图，不能融合（因安全限制），请下载后本地上传
     </div>
-    <footer>⚡ ParallelView · 本地/URL双支持 | URL原图用img标签展示，增强视图尽力而为</footer>
+    <footer>✨ 真正替你“融合”左右图，直接看到立体效果！</footer>
 </div>
 
 <script>
     (function(){
-        // ======================== DOM 元素 ==========================
+        // DOM 元素
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const originalBox = document.getElementById('originalBox');
-        const stereoCanvas = document.getElementById('stereoCanvas');
-        const gapSlider = document.getElementById('gapSlider');
-        const gapValueSpan = document.getElementById('gapValue');
-        const guideOpacitySlider = document.getElementById('guideOpacitySlider');
-        const guideValueSpan = document.getElementById('guideValue');
-        const resetBtn = document.getElementById('resetViewBtn');
+        const resultCanvas = document.getElementById('resultCanvas');
+        const makeAnaglyphBtn = document.getElementById('makeAnaglyphBtn');
+        const makeWiggleBtn = document.getElementById('makeWiggleBtn');
+        const disparitySlider = document.getElementById('disparitySlider');
+        const disparityVal = document.getElementById('disparityVal');
+        const resultStatus = document.getElementById('resultStatus');
         const imageUrlInput = document.getElementById('imageUrlInput');
         const loadUrlBtn = document.getElementById('loadUrlBtn');
         const clearUrlBtn = document.getElementById('clearUrlBtn');
-        const enhanceStatusMsg = document.getElementById('enhanceStatusMsg');
-        const controlsGroup = document.getElementById('controlsGroup');
 
-        // ======================== 全局状态 ==========================
-        let originalImgBitmap = null;      // 用于增强视图的位图
+        // 状态
+        let sourceImg = null;        // ImageBitmap (完整原图)
         let imgWidth = 0, imgHeight = 0;
-        let currentMode = null;            // 'file', 'url_success', 'url_fallback'
-        let gapPx = 12;
-        let guideOpacity = 0.4;
-        let controlsEnabled = false;        // 控件是否可用
+        let currentMode = null;      // 'file', 'url_ok', 'url_cross'
+        let disparity = 0;           // 视差偏移量（像素）
+        let animationInterval = null;
+        let isAnimating = false;
 
-        // 辅助：启用/禁用控件
-        function setControlsEnabled(enabled) {
-            controlsEnabled = enabled;
-            gapSlider.disabled = !enabled;
-            guideOpacitySlider.disabled = !enabled;
-            resetBtn.disabled = !enabled;
-            if (enabled) {
-                controlsGroup.classList.remove('disabled-control');
-            } else {
-                controlsGroup.classList.add('disabled-control');
+        // 辅助：释放旧图
+        function releaseSource() {
+            if (sourceImg) {
+                sourceImg.close?.();
+                sourceImg = null;
             }
         }
 
-        // 绘制增强视图 (仅在 originalImgBitmap 存在且控件启用时调用)
-        function drawEnhancedView() {
-            if (!controlsEnabled || !originalImgBitmap || imgWidth === 0 || imgHeight === 0) {
-                const ctx = stereoCanvas.getContext('2d');
-                ctx.clearRect(0, 0, stereoCanvas.width || 300, stereoCanvas.height || 200);
+        // 启用/禁用融合控件
+        function setFusionEnabled(enabled) {
+            makeAnaglyphBtn.disabled = !enabled;
+            makeWiggleBtn.disabled = !enabled;
+            disparitySlider.disabled = !enabled;
+            if (!enabled) {
+                if (animationInterval) clearInterval(animationInterval);
+                isAnimating = false;
+                resultStatus.innerText = '请上传本地图片或支持CORS的URL';
+                // 清空 canvas
+                const ctx = resultCanvas.getContext('2d');
+                ctx.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
                 ctx.fillStyle = '#0a1015';
-                ctx.fillRect(0, 0, stereoCanvas.width || 300, stereoCanvas.height || 200);
+                ctx.fillRect(0, 0, resultCanvas.width || 300, resultCanvas.height || 200);
                 ctx.fillStyle = '#70869b';
-                ctx.font = '14px system-ui';
-                ctx.textAlign = 'center';
-                let msg = controlsEnabled ? '等待图片数据...' : (currentMode === 'url_fallback' ? '⚠️ 跨域限制，无法生成增强视图' : '请上传本地图片或使用支持CORS的URL');
-                ctx.fillText(msg, (stereoCanvas.width || 300)/2, (stereoCanvas.height || 200)/2);
-                return;
+                ctx.fillText('融合功能不可用', 50, 100);
+            } else {
+                resultStatus.innerText = '已就绪，点击按钮生成融合效果';
             }
+        }
 
-            const container = document.getElementById('enhancedBox');
-            const maxWidth = container.clientWidth - 24;
-            if (maxWidth <= 0) return;
+        // 将原图根据视差生成左右半图（返回两个ImageData或直接绘制回调）
+        function getLeftRightImageData(ctx, width, height, disparityPx) {
+            const halfW = imgWidth / 2;
+            // 左半区域 (0,0, halfW, imgHeight)
+            // 右半区域 (halfW,0, halfW, imgHeight)
+            // 创建一个离屏canvas来截取左右图
+            const offCanvas = new OffscreenCanvas(halfW, imgHeight);
+            const offCtx = offCanvas.getContext('2d');
+            offCtx.drawImage(sourceImg, 0, 0, halfW, imgHeight, 0, 0, halfW, imgHeight);
+            const leftData = offCtx.getImageData(0, 0, halfW, imgHeight);
+            offCtx.clearRect(0, 0, halfW, imgHeight);
+            offCtx.drawImage(sourceImg, halfW, 0, halfW, imgHeight, 0, 0, halfW, imgHeight);
+            const rightData = offCtx.getImageData(0, 0, halfW, imgHeight);
+            return { leftData, rightData, halfW, halfH: imgHeight };
+        }
 
-            let displayWidth = Math.min(imgWidth, maxWidth);
-            let displayHeight = (displayWidth / imgWidth) * imgHeight;
-            stereoCanvas.width = displayWidth;
-            stereoCanvas.height = displayHeight;
-            stereoCanvas.style.width = `${displayWidth}px`;
-            stereoCanvas.style.height = `${displayHeight}px`;
-
-            const ctx = stereoCanvas.getContext('2d');
-            ctx.clearRect(0, 0, displayWidth, displayHeight);
-            ctx.fillStyle = '#030a0f';
-            ctx.fillRect(0, 0, displayWidth, displayHeight);
-
-            const halfWidth = imgWidth / 2;
-            const leftImgW = halfWidth, leftImgH = imgHeight;
-            const rightImgW = halfWidth, rightImgH = imgHeight;
-
-            const leftDrawWidth = displayWidth * (halfWidth / imgWidth);
-            const rightDrawWidth = displayWidth * (halfWidth / imgWidth);
-            let actualGap = gapPx;
-            const totalImgWidth = leftDrawWidth + rightDrawWidth;
-            let startX = (displayWidth - (totalImgWidth + actualGap)) / 2;
-            if (startX < 2) startX = 4;
-
-            try {
-                ctx.drawImage(originalImgBitmap, 0, 0, leftImgW, leftImgH, startX, 0, leftDrawWidth, displayHeight);
-                const rightStartX = startX + leftDrawWidth + actualGap;
-                ctx.drawImage(originalImgBitmap, halfWidth, 0, rightImgW, rightImgH, rightStartX, 0, rightDrawWidth, displayHeight);
-
-                if (guideOpacity > 0.01) {
-                    ctx.save();
-                    ctx.globalAlpha = Math.min(0.8, guideOpacity);
-                    ctx.strokeStyle = '#ffd966';
-                    ctx.lineWidth = 1.5;
-                    ctx.setLineDash([6, 8]);
-                    const leftCenterX = startX + leftDrawWidth / 2;
-                    const rightCenterX = rightStartX + rightDrawWidth / 2;
-                    ctx.beginPath();
-                    ctx.moveTo(leftCenterX, 0);
-                    ctx.lineTo(leftCenterX, displayHeight);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(rightCenterX, 0);
-                    ctx.lineTo(rightCenterX, displayHeight);
-                    ctx.stroke();
-
-                    ctx.setLineDash([4, 6]);
-                    ctx.strokeStyle = '#88ddff';
-                    const midY = displayHeight / 2;
-                    ctx.beginPath();
-                    ctx.moveTo(4, midY);
-                    ctx.lineTo(displayWidth-4, midY);
-                    ctx.stroke();
-
-                    ctx.beginPath();
-                    ctx.fillStyle = `rgba(255,215,0,${Math.min(0.5, guideOpacity)})`;
-                    ctx.arc((leftCenterX + rightCenterX)/2, midY, 5, 0, 2*Math.PI);
-                    ctx.fill();
-                    ctx.restore();
+        // 生成红蓝立体图 (anaglyph)
+        function generateAnaglyph() {
+            if (!sourceImg) return;
+            if (animationInterval) clearInterval(animationInterval);
+            isAnimating = false;
+            resultStatus.innerText = '正在生成红蓝立体图...';
+            setTimeout(() => {
+                try {
+                    const halfW = imgWidth / 2;
+                    const halfH = imgHeight;
+                    // 创建结果canvas
+                    resultCanvas.width = halfW;
+                    resultCanvas.height = halfH;
+                    resultCanvas.style.width = `${halfW}px`;
+                    resultCanvas.style.height = `${halfH}px`;
+                    const ctx = resultCanvas.getContext('2d');
+                    
+                    // 获取左右图数据
+                    const offCanvas = new OffscreenCanvas(halfW, halfH);
+                    const offCtx = offCanvas.getContext('2d');
+                    offCtx.drawImage(sourceImg, 0, 0, halfW, halfH, 0, 0, halfW, halfH);
+                    const leftPixels = offCtx.getImageData(0, 0, halfW, halfH);
+                    offCtx.clearRect(0, 0, halfW, halfH);
+                    offCtx.drawImage(sourceImg, halfW, 0, halfW, halfH, 0, 0, halfW, halfH);
+                    const rightPixels = offCtx.getImageData(0, 0, halfW, halfH);
+                    
+                    const shift = disparity; // 视差偏移
+                    const outputData = new ImageData(halfW, halfH);
+                    for (let y = 0; y < halfH; y++) {
+                        for (let x = 0; x < halfW; x++) {
+                            const srcX_left = Math.min(Math.max(x + shift, 0), halfW-1);
+                            const srcX_right = Math.min(Math.max(x - shift, 0), halfW-1);
+                            const leftIdx = (y * halfW + srcX_left) * 4;
+                            const rightIdx = (y * halfW + srcX_right) * 4;
+                            const outIdx = (y * halfW + x) * 4;
+                            // 红蓝立体：左图红色通道，右图蓝+绿通道
+                            outputData.data[outIdx] = leftPixels.data[leftIdx];         // R
+                            outputData.data[outIdx+1] = rightPixels.data[rightIdx+1];   // G
+                            outputData.data[outIdx+2] = rightPixels.data[rightIdx+2];   // B
+                            outputData.data[outIdx+3] = 255;
+                        }
+                    }
+                    ctx.putImageData(outputData, 0, 0);
+                    resultStatus.innerHTML = '✅ 红蓝立体图已生成！<br>佩戴红蓝眼镜即可看到立体效果';
+                } catch(e) {
+                    console.error(e);
+                    resultStatus.innerText = '生成失败，请检查图片是否标准并排图';
                 }
-                ctx.font = '12px monospace';
-                ctx.fillStyle = '#eef4ffaa';
-                ctx.fillText(`间距:${gapPx}px`, 8, 20);
-            } catch(e) {
-                console.warn("绘制增强视图时出错:", e);
-                enhanceStatusMsg.innerText = '绘制出错，可能原图不符规范';
-            }
+            }, 10);
         }
 
-        // 释放旧的位图
-        function releaseBitmap() {
-            if (originalImgBitmap) {
-                originalImgBitmap.close?.();
-                originalImgBitmap = null;
-            }
+        // 摆动动画 (左右交替)
+        let wiggleFrame = 0;
+        function startWiggle() {
+            if (!sourceImg) return;
+            if (animationInterval) clearInterval(animationInterval);
+            isAnimating = true;
+            const halfW = imgWidth / 2;
+            const halfH = imgHeight;
+            resultCanvas.width = halfW;
+            resultCanvas.height = halfH;
+            resultCanvas.style.width = `${halfW}px`;
+            resultCanvas.style.height = `${halfH}px`;
+            const ctx = resultCanvas.getContext('2d');
+            
+            const offCanvas = new OffscreenCanvas(halfW, halfH);
+            const offCtx = offCanvas.getContext('2d');
+            // 预存左右图
+            offCtx.drawImage(sourceImg, 0, 0, halfW, halfH, 0, 0, halfW, halfH);
+            const leftImgData = offCtx.getImageData(0, 0, halfW, halfH);
+            offCtx.clearRect(0, 0, halfW, halfH);
+            offCtx.drawImage(sourceImg, halfW, 0, halfW, halfH, 0, 0, halfW, halfH);
+            const rightImgData = offCtx.getImageData(0, 0, halfW, halfH);
+            
+            let frame = 0;
+            animationInterval = setInterval(() => {
+                if (!isAnimating) return;
+                ctx.putImageData((frame % 2 === 0) ? leftImgData : rightImgData, 0, 0);
+                frame++;
+            }, 300);
+            resultStatus.innerHTML = '🌀 摆动动画播放中 (左右交替) · 停止请点击其他按钮';
         }
 
-        // =============== 核心：本地上传 (经过测试，确保原图显示且增强可用) ===============
+        function stopWiggle() {
+            if (animationInterval) {
+                clearInterval(animationInterval);
+                animationInterval = null;
+            }
+            isAnimating = false;
+        }
+
+        // 处理本地上传
         async function handleLocalFile(file) {
             if (!file || !file.type.startsWith('image/')) {
-                alert('请选择图片文件 (JPEG/PNG/WEBP)');
+                alert('请选择图片文件');
                 return;
             }
-
-            // 显示加载中占位
-            originalBox.innerHTML = '<div style="color:#aac9e0;">⏳ 加载中...</div>';
-            enhanceStatusMsg.innerText = '正在处理本地图片...';
-            setControlsEnabled(false);   // 先禁用，成功后启用
-
-            // 创建 object URL
+            stopWiggle();
+            setFusionEnabled(false);
             const objectUrl = URL.createObjectURL(file);
             const img = new Image();
-
-            // 关键：等待图片加载完成后再进行后续操作，且不提前 revoke URL
             img.onload = async () => {
                 try {
-                    // 检查宽度是否为偶数，给出提示
                     if (img.width % 2 !== 0) {
-                        const warnDiv = document.createElement('div');
-                        warnDiv.className = 'error-msg';
-                        warnDiv.innerText = '⚠️ 图片宽度为奇数，左右分割可能不准确，建议使用偶数宽图片';
-                        originalBox.appendChild(warnDiv);
-                        setTimeout(() => warnDiv.remove(), 4000);
+                        alert('警告：图片宽度为奇数，可能影响左右分割');
                     }
-
-                    // 1. 显示原始图片 (img 标签)
+                    const bitmap = await createImageBitmap(img);
+                    releaseSource();
+                    sourceImg = bitmap;
+                    imgWidth = img.width;
+                    imgHeight = img.height;
+                    // 显示原图
                     originalBox.innerHTML = '';
                     const displayImg = document.createElement('img');
                     displayImg.src = objectUrl;
                     displayImg.style.maxWidth = '100%';
-                    displayImg.style.borderRadius = '16px';
-                    displayImg.alt = 'uploaded stereo image';
                     originalBox.appendChild(displayImg);
-
-                    // 2. 创建位图用于增强视图
-                    const bitmap = await createImageBitmap(img);
-                    releaseBitmap();
-                    originalImgBitmap = bitmap;
-                    imgWidth = img.width;
-                    imgHeight = img.height;
-
-                    // 3. 启用控件并绘制增强视图
-                    setControlsEnabled(true);
                     currentMode = 'file';
-                    enhanceStatusMsg.innerHTML = '✅ 本地上传成功，增强视图可用 | 可调节间距和辅助线';
-                    drawEnhancedView();
-
-                    // 注意：不要在这里 revoke objectUrl，因为原始 img 标签仍需它来显示。
-                    // 但为了不泄露内存，可以在页面关闭或下一次上传时 revoke 旧的。
-                    // 我们保留 objectUrl，并将它暂存，下次上传时清理。
-                } catch (err) {
-                    console.error("创建位图失败:", err);
-                    originalBox.innerHTML = `<div style="color:#ff8a7a;">❌ 图片处理失败: ${err.message || '未知错误'}</div>`;
-                    enhanceStatusMsg.innerText = '❌ 本地图片处理失败，请尝试其他图片';
-                    setControlsEnabled(false);
-                    releaseBitmap();
-                    URL.revokeObjectURL(objectUrl);
+                    setFusionEnabled(true);
+                    resultStatus.innerText = '本地上传成功，可点击生成融合效果';
+                    // 清空右图canvas
+                    const ctx = resultCanvas.getContext('2d');
+                    ctx.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
+                } catch(e) {
+                    console.error(e);
+                    originalBox.innerHTML = '<div style="color:#ff8a7a;">处理失败</div>';
+                    setFusionEnabled(false);
                 }
-            };
-
-            img.onerror = (err) => {
-                console.error("图片加载错误", err);
-                originalBox.innerHTML = '<div style="color:#ff8a7a;">❌ 图片加载失败，文件可能损坏或格式不支持</div>';
-                enhanceStatusMsg.innerText = '❌ 图片加载失败，请重试';
-                setControlsEnabled(false);
-                releaseBitmap();
                 URL.revokeObjectURL(objectUrl);
             };
-
+            img.onerror = () => {
+                originalBox.innerHTML = '<div style="color:#ff8a7a;">图片加载失败</div>';
+                setFusionEnabled(false);
+                URL.revokeObjectURL(objectUrl);
+            };
             img.src = objectUrl;
-            // 注意：不要立即 revoke，等待图片使用完（在 onload/onerror 中 revoke，或者保留下一次覆盖）
-            // 为了内存友好，这里将 objectUrl 存储，下次上传时 revoke 前一个
-            if (window._currentObjectUrl) {
-                URL.revokeObjectURL(window._currentObjectUrl);
-            }
-            window._currentObjectUrl = objectUrl;
         }
 
-        // =============== 线上 URL 处理 ===============
-        async function handleUrlImage(url) {
+        // URL加载（只能显示，无法融合除非CORS允许）
+        async function handleUrl(url) {
             if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
-                alert('请输入有效的 http:// 或 https:// 图片地址');
+                alert('请输入有效http/https地址');
                 return;
             }
-
-            // 1. 原始区域直接用 <img> 显示 (无跨域限制)
-            originalBox.innerHTML = '';
-            const rawImg = document.createElement('img');
-            rawImg.src = url;
-            rawImg.style.maxWidth = '100%';
-            rawImg.style.borderRadius = '16px';
-            rawImg.alt = 'online image';
-            rawImg.onerror = () => {
-                rawImg.alt = '加载失败';
-                originalBox.innerHTML = '<div style="color:#ff8a7a;">❌ 图片加载失败，请检查URL是否可访问</div>';
-            };
-            originalBox.appendChild(rawImg);
-
-            // 2. 尝试以 crossOrigin 方式获取图像数据（供增强视图）
-            enhanceStatusMsg.innerText = '⏳ 正在尝试获取图像数据以生成增强视图...';
-            setControlsEnabled(false);   // 先禁用
-            currentMode = null;
-
-            const testImg = new Image();
-            testImg.crossOrigin = 'Anonymous';
-            testImg.src = url;
-
-            // 超时保护
-            const timeoutId = setTimeout(() => {
-                if (!testImg.complete) {
-                    testImg.onerror?.();
+            stopWiggle();
+            setFusionEnabled(false);
+            originalBox.innerHTML = '<div style="color:#aac9e0;">加载中...</div>';
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.src = url;
+            img.onload = async () => {
+                try {
+                    const bitmap = await createImageBitmap(img);
+                    releaseSource();
+                    sourceImg = bitmap;
+                    imgWidth = img.width;
+                    imgHeight = img.height;
+                    // 显示原图
+                    originalBox.innerHTML = '';
+                    const displayImg = document.createElement('img');
+                    displayImg.src = url;
+                    displayImg.style.maxWidth = '100%';
+                    originalBox.appendChild(displayImg);
+                    currentMode = 'url_ok';
+                    setFusionEnabled(true);
+                    resultStatus.innerText = 'URL图片支持CORS，融合功能可用';
+                } catch(e) {
+                    // 跨域失败
+                    originalBox.innerHTML = '';
+                    const fallbackImg = document.createElement('img');
+                    fallbackImg.src = url;
+                    fallbackImg.style.maxWidth = '100%';
+                    fallbackImg.onerror = () => { fallbackImg.alt = '加载失败'; };
+                    originalBox.appendChild(fallbackImg);
+                    setFusionEnabled(false);
+                    resultStatus.innerText = '⚠️ 图片服务器不支持CORS，无法融合。请下载后本地上传。';
+                    releaseSource();
                 }
-            }, 10000);
-
-            try {
-                await new Promise((resolve, reject) => {
-                    testImg.onload = resolve;
-                    testImg.onerror = () => reject(new Error('加载失败(CORS或网络)'));
-                });
-                clearTimeout(timeoutId);
-
-                const bitmap = await createImageBitmap(testImg);
-                releaseBitmap();
-                originalImgBitmap = bitmap;
-                imgWidth = testImg.width;
-                imgHeight = testImg.height;
-                setControlsEnabled(true);
-                currentMode = 'url_success';
-                enhanceStatusMsg.innerHTML = '✅ URL图片支持CORS，增强视图已启用！可调节间距和辅助线。';
-                drawEnhancedView();
-            } catch (err) {
-                clearTimeout(timeoutId);
-                console.warn('增强视图所需图像数据获取失败(跨域):', err);
-                releaseBitmap();
-                setControlsEnabled(false);
-                currentMode = 'url_fallback';
-                enhanceStatusMsg.innerHTML = '⚠️ 该图片服务器不支持CORS，无法生成增强视图。<br>建议「下载图片后使用本地上传」获得完整3D调节功能。';
-                // 在 canvas 中显示提示
-                const ctx = stereoCanvas.getContext('2d');
-                stereoCanvas.width = 400;
-                stereoCanvas.height = 260;
-                ctx.fillStyle = '#0a1015';
-                ctx.fillRect(0, 0, 400, 260);
-                ctx.fillStyle = '#ffb347';
-                ctx.font = '12px system-ui';
-                ctx.textAlign = 'center';
-                ctx.fillText('跨域限制，无法生成立体增强视图', 200, 130);
-                ctx.fillStyle = '#9aaebf';
-                ctx.fillText('请使用本地上传功能', 200, 160);
-            }
+            };
+            img.onerror = () => {
+                originalBox.innerHTML = '<div style="color:#ff8a7a;">图片加载失败，请检查URL</div>';
+                setFusionEnabled(false);
+                releaseSource();
+            };
         }
 
-        // 重置间距
-        function resetGap() {
-            if (!controlsEnabled) return;
-            gapSlider.value = '12';
-            gapPx = 12;
-            gapValueSpan.innerText = '12px';
-            drawEnhancedView();
-        }
-
-        // 监听滑块事件
-        gapSlider.addEventListener('input', (e) => {
-            if (!controlsEnabled) return;
-            gapPx = parseInt(e.target.value, 10);
-            gapValueSpan.innerText = gapPx + 'px';
-            drawEnhancedView();
-        });
-        guideOpacitySlider.addEventListener('input', (e) => {
-            if (!controlsEnabled) return;
-            let val = parseInt(e.target.value, 10);
-            guideValueSpan.innerText = val + '%';
-            guideOpacity = val / 100;
-            drawEnhancedView();
-        });
-        resetBtn.addEventListener('click', resetGap);
-
-        // 本地上传交互
+        // 事件绑定
         uploadArea.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) handleLocalFile(e.target.files[0]);
+            if (e.target.files[0]) handleLocalFile(e.target.files[0]);
         });
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.style.borderColor = '#2c9bff';
-        });
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.style.borderColor = '#3e5568';
-        });
+        uploadArea.addEventListener('dragover', (e) => e.preventDefault());
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
-            uploadArea.style.borderColor = '#3e5568';
-            const files = e.dataTransfer.files;
-            if (files.length && files[0].type.startsWith('image/')) handleLocalFile(files[0]);
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) handleLocalFile(file);
             else alert('请拖入图片文件');
         });
-
-        // URL加载
         loadUrlBtn.addEventListener('click', () => {
             const url = imageUrlInput.value.trim();
-            if (url) handleUrlImage(url);
-            else alert('请输入图片URL');
+            if (url) handleUrl(url);
         });
-        clearUrlBtn.addEventListener('click', () => {
-            imageUrlInput.value = '';
+        clearUrlBtn.addEventListener('click', () => { imageUrlInput.value = ''; });
+        
+        makeAnaglyphBtn.addEventListener('click', () => {
+            if (sourceImg && currentMode !== null) {
+                stopWiggle();
+                generateAnaglyph();
+            }
         });
-        imageUrlInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') loadUrlBtn.click();
+        makeWiggleBtn.addEventListener('click', () => {
+            if (sourceImg && currentMode !== null) {
+                if (animationInterval) stopWiggle();
+                startWiggle();
+            }
         });
-
-        // 窗口大小改变时重绘
-        window.addEventListener('resize', () => { if (controlsEnabled && originalImgBitmap) drawEnhancedView(); });
-        const resizeObserver = new ResizeObserver(() => { if (controlsEnabled && originalImgBitmap) drawEnhancedView(); });
-        resizeObserver.observe(document.getElementById('enhancedBox'));
-
-        // 初始占位 canvas
-        const initCtx = stereoCanvas.getContext('2d');
-        stereoCanvas.width = 400;
-        stereoCanvas.height = 260;
-        initCtx.fillStyle = '#0a1015';
-        initCtx.fillRect(0, 0, 400, 260);
-        initCtx.fillStyle = '#aac9e0';
-        initCtx.fillText('等待图片', 180, 130);
-        setControlsEnabled(false);
+        disparitySlider.addEventListener('input', (e) => {
+            disparity = parseInt(e.target.value, 10);
+            disparityVal.innerText = disparity;
+            // 如果当前显示的是红蓝图，可以实时更新
+            if (sourceImg && !animationInterval && resultCanvas.width > 0) {
+                // 简单重新生成红蓝（但用户可能需要点按钮）
+                // 为了避免卡顿，不自动重绘，只提示
+                resultStatus.innerHTML = `视差已调至 ${disparity}，请重新点击「生成红蓝立体图」生效`;
+            }
+        });
+        
+        // 初始状态
+        setFusionEnabled(false);
+        resultCanvas.width = 400;
+        resultCanvas.height = 260;
+        const ctx = resultCanvas.getContext('2d');
+        ctx.fillStyle = '#0a1015';
+        ctx.fillRect(0, 0, 400, 260);
+        ctx.fillStyle = '#aac9e0';
+        ctx.fillText('等待上传图片', 140, 130);
     })();
 </script>
 </body>
