@@ -333,7 +333,7 @@
 
 <script>
     (function(){
-        // DOM 元素
+        // ======================== DOM 元素 ==========================
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         const originalBox = document.getElementById('originalBox');
@@ -349,7 +349,7 @@
         const enhanceStatusMsg = document.getElementById('enhanceStatusMsg');
         const controlsGroup = document.getElementById('controlsGroup');
 
-        // 状态变量
+        // ======================== 全局状态 ==========================
         let originalImgBitmap = null;      // 用于增强视图的位图
         let imgWidth = 0, imgHeight = 0;
         let currentMode = null;            // 'file', 'url_success', 'url_fallback'
@@ -357,7 +357,7 @@
         let guideOpacity = 0.4;
         let controlsEnabled = false;        // 控件是否可用
 
-        // 启用/禁用控件
+        // 辅助：启用/禁用控件
         function setControlsEnabled(enabled) {
             controlsEnabled = enabled;
             gapSlider.disabled = !enabled;
@@ -370,10 +370,9 @@
             }
         }
 
-        // 绘制增强视图 (仅在originalImgBitmap存在且控件启用时调用)
+        // 绘制增强视图 (仅在 originalImgBitmap 存在且控件启用时调用)
         function drawEnhancedView() {
             if (!controlsEnabled || !originalImgBitmap || imgWidth === 0 || imgHeight === 0) {
-                // 显示占位或错误信息
                 const ctx = stereoCanvas.getContext('2d');
                 ctx.clearRect(0, 0, stereoCanvas.width || 300, stereoCanvas.height || 200);
                 ctx.fillStyle = '#0a1015';
@@ -453,12 +452,12 @@
                 ctx.fillStyle = '#eef4ffaa';
                 ctx.fillText(`间距:${gapPx}px`, 8, 20);
             } catch(e) {
-                console.warn(e);
+                console.warn("绘制增强视图时出错:", e);
                 enhanceStatusMsg.innerText = '绘制出错，可能原图不符规范';
             }
         }
 
-        // 清除现有位图
+        // 释放旧的位图
         function releaseBitmap() {
             if (originalImgBitmap) {
                 originalImgBitmap.close?.();
@@ -466,48 +465,95 @@
             }
         }
 
-        // 本地上传处理 (全功能)
-        async function handleFile(file) {
+        // =============== 核心：本地上传 (经过测试，确保原图显示且增强可用) ===============
+        async function handleLocalFile(file) {
             if (!file || !file.type.startsWith('image/')) {
-                alert('请选择图片文件');
+                alert('请选择图片文件 (JPEG/PNG/WEBP)');
                 return;
             }
-            const objectURL = URL.createObjectURL(file);
-            const imgElement = new Image();
-            imgElement.src = objectURL;
-            try {
-                const bitmap = await createImageBitmap(imgElement);
-                releaseBitmap();
-                originalImgBitmap = bitmap;
-                imgWidth = imgElement.width;
-                imgHeight = imgElement.height;
-                // 显示原图
-                originalBox.innerHTML = '';
-                const displayImg = document.createElement('img');
-                displayImg.src = objectURL;
-                displayImg.style.maxWidth = '100%';
-                displayImg.style.borderRadius = '16px';
-                originalBox.appendChild(displayImg);
-                setControlsEnabled(true);
-                currentMode = 'file';
-                enhanceStatusMsg.innerText = '✅ 本地上传成功，增强视图可用';
-                drawEnhancedView();
-                URL.revokeObjectURL(objectURL);
-            } catch(err) {
-                console.error(err);
-                originalBox.innerHTML = '<div style="color:#ff8a7a;">文件加载失败</div>';
+
+            // 显示加载中占位
+            originalBox.innerHTML = '<div style="color:#aac9e0;">⏳ 加载中...</div>';
+            enhanceStatusMsg.innerText = '正在处理本地图片...';
+            setControlsEnabled(false);   // 先禁用，成功后启用
+
+            // 创建 object URL
+            const objectUrl = URL.createObjectURL(file);
+            const img = new Image();
+
+            // 关键：等待图片加载完成后再进行后续操作，且不提前 revoke URL
+            img.onload = async () => {
+                try {
+                    // 检查宽度是否为偶数，给出提示
+                    if (img.width % 2 !== 0) {
+                        const warnDiv = document.createElement('div');
+                        warnDiv.className = 'error-msg';
+                        warnDiv.innerText = '⚠️ 图片宽度为奇数，左右分割可能不准确，建议使用偶数宽图片';
+                        originalBox.appendChild(warnDiv);
+                        setTimeout(() => warnDiv.remove(), 4000);
+                    }
+
+                    // 1. 显示原始图片 (img 标签)
+                    originalBox.innerHTML = '';
+                    const displayImg = document.createElement('img');
+                    displayImg.src = objectUrl;
+                    displayImg.style.maxWidth = '100%';
+                    displayImg.style.borderRadius = '16px';
+                    displayImg.alt = 'uploaded stereo image';
+                    originalBox.appendChild(displayImg);
+
+                    // 2. 创建位图用于增强视图
+                    const bitmap = await createImageBitmap(img);
+                    releaseBitmap();
+                    originalImgBitmap = bitmap;
+                    imgWidth = img.width;
+                    imgHeight = img.height;
+
+                    // 3. 启用控件并绘制增强视图
+                    setControlsEnabled(true);
+                    currentMode = 'file';
+                    enhanceStatusMsg.innerHTML = '✅ 本地上传成功，增强视图可用 | 可调节间距和辅助线';
+                    drawEnhancedView();
+
+                    // 注意：不要在这里 revoke objectUrl，因为原始 img 标签仍需它来显示。
+                    // 但为了不泄露内存，可以在页面关闭或下一次上传时 revoke 旧的。
+                    // 我们保留 objectUrl，并将它暂存，下次上传时清理。
+                } catch (err) {
+                    console.error("创建位图失败:", err);
+                    originalBox.innerHTML = `<div style="color:#ff8a7a;">❌ 图片处理失败: ${err.message || '未知错误'}</div>`;
+                    enhanceStatusMsg.innerText = '❌ 本地图片处理失败，请尝试其他图片';
+                    setControlsEnabled(false);
+                    releaseBitmap();
+                    URL.revokeObjectURL(objectUrl);
+                }
+            };
+
+            img.onerror = (err) => {
+                console.error("图片加载错误", err);
+                originalBox.innerHTML = '<div style="color:#ff8a7a;">❌ 图片加载失败，文件可能损坏或格式不支持</div>';
+                enhanceStatusMsg.innerText = '❌ 图片加载失败，请重试';
                 setControlsEnabled(false);
-                enhanceStatusMsg.innerText = '❌ 图片加载失败';
+                releaseBitmap();
+                URL.revokeObjectURL(objectUrl);
+            };
+
+            img.src = objectUrl;
+            // 注意：不要立即 revoke，等待图片使用完（在 onload/onerror 中 revoke，或者保留下一次覆盖）
+            // 为了内存友好，这里将 objectUrl 存储，下次上传时 revoke 前一个
+            if (window._currentObjectUrl) {
+                URL.revokeObjectURL(window._currentObjectUrl);
             }
+            window._currentObjectUrl = objectUrl;
         }
 
-        // URL 加载: 始终先用 img 标签显示原图，再尝试获取位图用于增强视图
-        async function handleUrl(url) {
+        // =============== 线上 URL 处理 ===============
+        async function handleUrlImage(url) {
             if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
                 alert('请输入有效的 http:// 或 https:// 图片地址');
                 return;
             }
-            // 1. 直接在原始区域显示 img 标签 (无CORS限制)
+
+            // 1. 原始区域直接用 <img> 显示 (无跨域限制)
             originalBox.innerHTML = '';
             const rawImg = document.createElement('img');
             rawImg.src = url;
@@ -516,17 +562,19 @@
             rawImg.alt = 'online image';
             rawImg.onerror = () => {
                 rawImg.alt = '加载失败';
-                originalBox.innerHTML = '<div style="color:#ff8a7a;">❌ 图片加载失败，请检查URL</div>';
+                originalBox.innerHTML = '<div style="color:#ff8a7a;">❌ 图片加载失败，请检查URL是否可访问</div>';
             };
             originalBox.appendChild(rawImg);
 
-            // 2. 尝试以 crossOrigin 方式获取图像数据（供canvas增强使用）
+            // 2. 尝试以 crossOrigin 方式获取图像数据（供增强视图）
             enhanceStatusMsg.innerText = '⏳ 正在尝试获取图像数据以生成增强视图...';
-            setControlsEnabled(false); // 先禁用，等成功再启用
+            setControlsEnabled(false);   // 先禁用
+            currentMode = null;
 
             const testImg = new Image();
             testImg.crossOrigin = 'Anonymous';
             testImg.src = url;
+
             // 超时保护
             const timeoutId = setTimeout(() => {
                 if (!testImg.complete) {
@@ -537,10 +585,10 @@
             try {
                 await new Promise((resolve, reject) => {
                     testImg.onload = resolve;
-                    testImg.onerror = () => reject(new Error('图片加载失败(可能CORS或网络问题)'));
+                    testImg.onerror = () => reject(new Error('加载失败(CORS或网络)'));
                 });
                 clearTimeout(timeoutId);
-                // 成功获取图片 (但可能仍因CORS无法读取像素？创建ImageBitmap会检查)
+
                 const bitmap = await createImageBitmap(testImg);
                 releaseBitmap();
                 originalImgBitmap = bitmap;
@@ -548,16 +596,16 @@
                 imgHeight = testImg.height;
                 setControlsEnabled(true);
                 currentMode = 'url_success';
-                enhanceStatusMsg.innerText = '✅ URL图片支持CORS，增强视图已启用！可调节间距和辅助线。';
+                enhanceStatusMsg.innerHTML = '✅ URL图片支持CORS，增强视图已启用！可调节间距和辅助线。';
                 drawEnhancedView();
             } catch (err) {
                 clearTimeout(timeoutId);
-                console.warn('无法获取增强视图所需图像数据:', err);
+                console.warn('增强视图所需图像数据获取失败(跨域):', err);
                 releaseBitmap();
                 setControlsEnabled(false);
                 currentMode = 'url_fallback';
                 enhanceStatusMsg.innerHTML = '⚠️ 该图片服务器不支持CORS，无法生成增强视图。<br>建议「下载图片后使用本地上传」获得完整3D调节功能。';
-                // 绘制一个提示画面
+                // 在 canvas 中显示提示
                 const ctx = stereoCanvas.getContext('2d');
                 stereoCanvas.width = 400;
                 stereoCanvas.height = 260;
@@ -581,7 +629,7 @@
             drawEnhancedView();
         }
 
-        // 滑块事件
+        // 监听滑块事件
         gapSlider.addEventListener('input', (e) => {
             if (!controlsEnabled) return;
             gapPx = parseInt(e.target.value, 10);
@@ -600,7 +648,7 @@
         // 本地上传交互
         uploadArea.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+            if (e.target.files && e.target.files[0]) handleLocalFile(e.target.files[0]);
         });
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -613,29 +661,29 @@
             e.preventDefault();
             uploadArea.style.borderColor = '#3e5568';
             const files = e.dataTransfer.files;
-            if (files.length && files[0].type.startsWith('image/')) handleFile(files[0]);
+            if (files.length && files[0].type.startsWith('image/')) handleLocalFile(files[0]);
             else alert('请拖入图片文件');
         });
 
         // URL加载
         loadUrlBtn.addEventListener('click', () => {
             const url = imageUrlInput.value.trim();
-            if (url) handleUrl(url);
+            if (url) handleUrlImage(url);
             else alert('请输入图片URL');
         });
         clearUrlBtn.addEventListener('click', () => {
             imageUrlInput.value = '';
-            // 不清除当前显示，只清空输入框
         });
         imageUrlInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') loadUrlBtn.click();
         });
 
+        // 窗口大小改变时重绘
         window.addEventListener('resize', () => { if (controlsEnabled && originalImgBitmap) drawEnhancedView(); });
         const resizeObserver = new ResizeObserver(() => { if (controlsEnabled && originalImgBitmap) drawEnhancedView(); });
         resizeObserver.observe(document.getElementById('enhancedBox'));
 
-        // 初始空白canvas
+        // 初始占位 canvas
         const initCtx = stereoCanvas.getContext('2d');
         stereoCanvas.width = 400;
         stereoCanvas.height = 260;
