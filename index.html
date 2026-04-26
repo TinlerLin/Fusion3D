@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>ParallelView · 立体融合器 | 红蓝3D + 摆动动画</title>
+    <title>ParallelView · 智能立体融合器 | 动态布局</title>
     <style>
         * {
             box-sizing: border-box;
@@ -16,7 +16,7 @@
             padding: 20px;
         }
         .app-container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             background: rgba(22, 28, 38, 0.75);
             backdrop-filter: blur(12px);
@@ -91,11 +91,22 @@
             cursor: pointer;
         }
         .file-input { display: none; }
+        
+        /* 动态布局容器 */
         .preview-section {
             display: flex;
             flex-wrap: wrap;
             gap: 28px;
             margin: 20px 0;
+            transition: all 0.2s;
+        }
+        /* 默认上下排列 (横图或方形) */
+        .preview-section.vertical-layout {
+            flex-direction: column;
+        }
+        /* 竖图时左右并排 */
+        .preview-section.horizontal-layout {
+            flex-direction: row;
         }
         .card {
             background: #10181fcc;
@@ -125,6 +136,7 @@
             max-width: 100%;
             border-radius: 16px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            object-fit: contain;
         }
         .control-bar {
             margin-top: 18px;
@@ -182,13 +194,17 @@
         @media (max-width: 780px) {
             .url-section { flex-direction: column; }
             .control-bar { flex-direction: column; align-items: stretch; }
+            /* 手机屏幕强制上下布局，避免过窄 */
+            .preview-section.horizontal-layout {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
 <div class="app-container">
-    <h1>🧬 ParallelView · 立体融合器 <small>红蓝3D + 摆动动画</small></h1>
-    <div class="sub">上传左右并排平行眼图片 → 一键生成“融合立体效果图”（无需自己平行眼）</div>
+    <h1>🧬 ParallelView · 立体融合器 <small>动态布局 | 红蓝3D + 摆动动画</small></h1>
+    <div class="sub">上传左右并排平行眼图片 → 一键生成可直接看出3D的立体效果（无需自己融合）</div>
 
     <div class="upload-area" id="uploadArea">
         <div class="upload-icon">📁📸</div>
@@ -203,7 +219,8 @@
         <button id="clearUrlBtn" class="url-btn" style="background:#3a4e62;">清空</button>
     </div>
 
-    <div class="preview-section">
+    <!-- 动态布局容器 -->
+    <div class="preview-section" id="previewSection">
         <div class="card">
             <h3>📌 原始并排图</h3>
             <div class="image-box" id="originalBox">
@@ -230,12 +247,13 @@
 
     <div class="info-tip">
         <strong>📌 使用说明</strong><br>
-        • 本地图片：上传后点击「生成红蓝立体图」即可得到红蓝3D效果（佩戴红蓝眼镜观看）<br>
-        • 也可点击「生成摆动动画」：左右图交替闪烁，产生无需眼镜的伪立体感<br>
-        • 视差调节：可微调左右图对齐距离（红蓝图更舒适）<br>
-        • 跨域URL图片：只能显示原图，不能融合（因安全限制），请下载后本地上传
+        • 布局将根据原图宽高比自动优化：<strong>竖图（高>宽）左右并排，横图/方图上下排列</strong>，充分展示细节。<br>
+        • 本地图片上传后：点击「生成红蓝立体图」→ 红蓝3D效果（需佩戴红蓝眼镜）<br>
+        • 点击「生成摆动动画」→ 左右图交替闪烁，产生无需眼镜的伪立体感<br>
+        • 视差调节可微调左右图对齐距离，改善立体融合效果<br>
+        • 跨域URL图片：只能显示原图，无法融合（安全限制），请下载后本地上传
     </div>
-    <footer>✨ 真正替你“融合”左右图，直接看到立体效果！</footer>
+    <footer>✨ 智能布局 + 一键立体融合，真正替你看到3D效果！</footer>
 </div>
 
 <script>
@@ -253,14 +271,30 @@
         const imageUrlInput = document.getElementById('imageUrlInput');
         const loadUrlBtn = document.getElementById('loadUrlBtn');
         const clearUrlBtn = document.getElementById('clearUrlBtn');
+        const previewSection = document.getElementById('previewSection');
 
         // 状态
         let sourceImg = null;        // ImageBitmap (完整原图)
         let imgWidth = 0, imgHeight = 0;
         let currentMode = null;      // 'file', 'url_ok', 'url_cross'
-        let disparity = 0;           // 视差偏移量（像素）
+        let disparity = 0;           // 视差偏移
         let animationInterval = null;
         let isAnimating = false;
+
+        // 动态布局函数：根据宽高比调整 preview-section 的布局方向
+        function updateLayoutBasedOnAspect() {
+            if (!imgWidth || !imgHeight) return;
+            const isPortrait = imgHeight > imgWidth;  // 竖图 (高>宽)
+            if (isPortrait) {
+                // 左右并排 ( horizontal-layout 表示 row 方向)
+                previewSection.classList.remove('vertical-layout');
+                previewSection.classList.add('horizontal-layout');
+            } else {
+                // 上下排列
+                previewSection.classList.remove('horizontal-layout');
+                previewSection.classList.add('vertical-layout');
+            }
+        }
 
         // 辅助：释放旧图
         function releaseSource() {
@@ -279,7 +313,6 @@
                 if (animationInterval) clearInterval(animationInterval);
                 isAnimating = false;
                 resultStatus.innerText = '请上传本地图片或支持CORS的URL';
-                // 清空 canvas
                 const ctx = resultCanvas.getContext('2d');
                 ctx.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
                 ctx.fillStyle = '#0a1015';
@@ -291,23 +324,7 @@
             }
         }
 
-        // 将原图根据视差生成左右半图（返回两个ImageData或直接绘制回调）
-        function getLeftRightImageData(ctx, width, height, disparityPx) {
-            const halfW = imgWidth / 2;
-            // 左半区域 (0,0, halfW, imgHeight)
-            // 右半区域 (halfW,0, halfW, imgHeight)
-            // 创建一个离屏canvas来截取左右图
-            const offCanvas = new OffscreenCanvas(halfW, imgHeight);
-            const offCtx = offCanvas.getContext('2d');
-            offCtx.drawImage(sourceImg, 0, 0, halfW, imgHeight, 0, 0, halfW, imgHeight);
-            const leftData = offCtx.getImageData(0, 0, halfW, imgHeight);
-            offCtx.clearRect(0, 0, halfW, imgHeight);
-            offCtx.drawImage(sourceImg, halfW, 0, halfW, imgHeight, 0, 0, halfW, imgHeight);
-            const rightData = offCtx.getImageData(0, 0, halfW, imgHeight);
-            return { leftData, rightData, halfW, halfH: imgHeight };
-        }
-
-        // 生成红蓝立体图 (anaglyph)
+        // 生成红蓝立体图 (基于当前视差)
         function generateAnaglyph() {
             if (!sourceImg) return;
             if (animationInterval) clearInterval(animationInterval);
@@ -317,14 +334,12 @@
                 try {
                     const halfW = imgWidth / 2;
                     const halfH = imgHeight;
-                    // 创建结果canvas
                     resultCanvas.width = halfW;
                     resultCanvas.height = halfH;
                     resultCanvas.style.width = `${halfW}px`;
                     resultCanvas.style.height = `${halfH}px`;
                     const ctx = resultCanvas.getContext('2d');
                     
-                    // 获取左右图数据
                     const offCanvas = new OffscreenCanvas(halfW, halfH);
                     const offCtx = offCanvas.getContext('2d');
                     offCtx.drawImage(sourceImg, 0, 0, halfW, halfH, 0, 0, halfW, halfH);
@@ -333,7 +348,7 @@
                     offCtx.drawImage(sourceImg, halfW, 0, halfW, halfH, 0, 0, halfW, halfH);
                     const rightPixels = offCtx.getImageData(0, 0, halfW, halfH);
                     
-                    const shift = disparity; // 视差偏移
+                    const shift = disparity;
                     const outputData = new ImageData(halfW, halfH);
                     for (let y = 0; y < halfH; y++) {
                         for (let x = 0; x < halfW; x++) {
@@ -342,10 +357,9 @@
                             const leftIdx = (y * halfW + srcX_left) * 4;
                             const rightIdx = (y * halfW + srcX_right) * 4;
                             const outIdx = (y * halfW + x) * 4;
-                            // 红蓝立体：左图红色通道，右图蓝+绿通道
-                            outputData.data[outIdx] = leftPixels.data[leftIdx];         // R
-                            outputData.data[outIdx+1] = rightPixels.data[rightIdx+1];   // G
-                            outputData.data[outIdx+2] = rightPixels.data[rightIdx+2];   // B
+                            outputData.data[outIdx] = leftPixels.data[leftIdx];
+                            outputData.data[outIdx+1] = rightPixels.data[rightIdx+1];
+                            outputData.data[outIdx+2] = rightPixels.data[rightIdx+2];
                             outputData.data[outIdx+3] = 255;
                         }
                     }
@@ -358,8 +372,7 @@
             }, 10);
         }
 
-        // 摆动动画 (左右交替)
-        let wiggleFrame = 0;
+        // 摆动动画
         function startWiggle() {
             if (!sourceImg) return;
             if (animationInterval) clearInterval(animationInterval);
@@ -374,7 +387,6 @@
             
             const offCanvas = new OffscreenCanvas(halfW, halfH);
             const offCtx = offCanvas.getContext('2d');
-            // 预存左右图
             offCtx.drawImage(sourceImg, 0, 0, halfW, halfH, 0, 0, halfW, halfH);
             const leftImgData = offCtx.getImageData(0, 0, halfW, halfH);
             offCtx.clearRect(0, 0, halfW, halfH);
@@ -418,6 +430,8 @@
                     sourceImg = bitmap;
                     imgWidth = img.width;
                     imgHeight = img.height;
+                    // 动态布局
+                    updateLayoutBasedOnAspect();
                     // 显示原图
                     originalBox.innerHTML = '';
                     const displayImg = document.createElement('img');
@@ -427,7 +441,6 @@
                     currentMode = 'file';
                     setFusionEnabled(true);
                     resultStatus.innerText = '本地上传成功，可点击生成融合效果';
-                    // 清空右图canvas
                     const ctx = resultCanvas.getContext('2d');
                     ctx.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
                 } catch(e) {
@@ -445,7 +458,7 @@
             img.src = objectUrl;
         }
 
-        // URL加载（只能显示，无法融合除非CORS允许）
+        // URL加载
         async function handleUrl(url) {
             if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
                 alert('请输入有效http/https地址');
@@ -464,7 +477,7 @@
                     sourceImg = bitmap;
                     imgWidth = img.width;
                     imgHeight = img.height;
-                    // 显示原图
+                    updateLayoutBasedOnAspect();
                     originalBox.innerHTML = '';
                     const displayImg = document.createElement('img');
                     displayImg.src = url;
@@ -526,10 +539,7 @@
         disparitySlider.addEventListener('input', (e) => {
             disparity = parseInt(e.target.value, 10);
             disparityVal.innerText = disparity;
-            // 如果当前显示的是红蓝图，可以实时更新
             if (sourceImg && !animationInterval && resultCanvas.width > 0) {
-                // 简单重新生成红蓝（但用户可能需要点按钮）
-                // 为了避免卡顿，不自动重绘，只提示
                 resultStatus.innerHTML = `视差已调至 ${disparity}，请重新点击「生成红蓝立体图」生效`;
             }
         });
