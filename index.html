@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>平行眼3D图片助手 | 裸眼3D WebApp</title>
+    <title>ParallelView · 平行眼3D图片助手 | 本地/URL双支持</title>
     <style>
         * {
             box-sizing: border-box;
-            user-select: none; /* 避免拖动干扰，但不影响文字选择 */
+            user-select: none;
         }
         body {
             background: linear-gradient(145deg, #1a2634 0%, #0f1722 100%);
@@ -20,7 +20,7 @@
             padding: 20px;
         }
         .app-container {
-            max-width: 1300px;
+            max-width: 1400px;
             width: 100%;
             background: rgba(22, 28, 38, 0.75);
             backdrop-filter: blur(12px);
@@ -49,7 +49,6 @@
             padding: 4px 12px;
             border-radius: 60px;
             font-weight: normal;
-            letter-spacing: 0;
         }
         .sub {
             color: #9aaebf;
@@ -62,23 +61,63 @@
             background: rgba(10, 18, 28, 0.6);
             border: 2px dashed #3e5568;
             border-radius: 32px;
-            padding: 28px 20px;
+            padding: 20px 20px;
             text-align: center;
             cursor: pointer;
             transition: 0.2s;
-            margin-bottom: 28px;
+            margin-bottom: 20px;
         }
         .upload-area:hover {
             border-color: #2c9bff;
             background: rgba(44, 155, 255, 0.08);
         }
         .upload-icon {
-            font-size: 48px;
-            margin-bottom: 8px;
+            font-size: 38px;
+            margin-bottom: 6px;
         }
         .upload-hint {
             color: #bfd6e8;
             font-weight: 500;
+        }
+        .url-section {
+            background: #07121acc;
+            border-radius: 28px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #2e4a62;
+        }
+        .url-input {
+            flex: 3;
+            background: #0a1118;
+            border: 1px solid #3c5b72;
+            border-radius: 60px;
+            padding: 12px 18px;
+            color: white;
+            font-size: 0.9rem;
+            outline: none;
+            font-family: monospace;
+        }
+        .url-input:focus {
+            border-color: #2c9bff;
+        }
+        .url-btn {
+            background: #1f6392;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 60px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9rem;
+        }
+        .url-btn:hover {
+            background: #2c9bff;
+            transform: scale(0.97);
         }
         .file-input {
             display: none;
@@ -87,7 +126,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 28px;
-            margin: 28px 0 24px;
+            margin: 20px 0 20px;
         }
         .card {
             background: #10181fcc;
@@ -97,7 +136,6 @@
             flex: 1;
             min-width: 260px;
             border: 1px solid rgba(72, 99, 118, 0.5);
-            transition: 0.2s;
         }
         .card h3 {
             margin: 0 0 12px 0;
@@ -126,12 +164,6 @@
             display: block;
             margin: 0 auto;
         }
-        .viewer-canvas {
-            background: #0a1015;
-            width: 100%;
-            height: auto;
-            cursor: pointer;
-        }
         .control-group {
             margin-top: 18px;
             display: flex;
@@ -157,10 +189,6 @@
             -webkit-appearance: none;
             background: #2f4b62;
             border-radius: 4px;
-            outline: none;
-        }
-        input[type="range"]:focus {
-            outline: none;
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -169,8 +197,6 @@
             background: #2c9bff;
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 0 6px #8acbff;
-            border: none;
         }
         .btn-reset {
             background: #2c3e4e;
@@ -184,7 +210,6 @@
         }
         .btn-reset:hover {
             background: #1e6faf;
-            transform: scale(0.96);
         }
         .info-tip {
             background: #071824b3;
@@ -208,7 +233,6 @@
             border-radius: 40px;
             padding: 4px 14px;
             font-family: monospace;
-            font-weight: bold;
         }
         footer {
             text-align: center;
@@ -217,27 +241,27 @@
             opacity: 0.6;
             color: #8aaec0;
         }
-        @media (max-width: 780px) {
-            .app-container {
-                padding: 18px;
-            }
-            .card h3 {
-                font-size: 1rem;
-            }
-            .control-group {
-                flex-direction: column;
-                align-items: stretch;
-                border-radius: 28px;
-            }
-        }
-        button {
-            background: none;
-            border: none;
-        }
         .warning-text {
             color: #ffb347;
-            font-size: 0.8rem;
-            margin-top: 8px;
+            font-size: 0.75rem;
+            margin-top: 6px;
+        }
+        .error-msg {
+            color: #ff8a7a;
+            font-size: 0.75rem;
+            margin-top: 5px;
+        }
+        @media (max-width: 780px) {
+            .control-group {
+                flex-direction: column;
+                border-radius: 28px;
+            }
+            .url-section {
+                flex-direction: column;
+            }
+            .url-btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -245,75 +269,74 @@
 <div class="app-container">
     <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap;">
         <h1>
-            👁️ 平行眼·3D 立体视觉器
-            <small>Parallel View</small>
+            👁️ ParallelView · 平行眼3D
+            <small>本地+URL</small>
         </h1>
     </div>
     <div class="sub">
-        上传左右并排的平行眼3D照片 → 自动生成可调间距的立体视图｜ 用平行眼技法融合左右图，感受裸眼3D！
+        上传左右并排平行眼3D照片 或 输入图片网址 → 生成可调间距的立体视图｜用平行眼技法感受裸眼3D！
     </div>
 
-    <!-- 上传区域 -->
+    <!-- 本地上传区域 -->
     <div class="upload-area" id="uploadArea">
-        <div class="upload-icon">📸🖼️</div>
-        <div class="upload-hint">点击或拖拽上传平行眼图片 (左右并排格式)</div>
-        <div class="warning-text" style="font-size:0.75rem;">支持 JPG, PNG, WEBP | 图片宽度最好为偶数</div>
+        <div class="upload-icon">📁📸</div>
+        <div class="upload-hint">点击或拖拽上传本地平行眼图片 (JPG/PNG/WEBP)</div>
+        <div class="warning-text">建议图片宽度为偶数，左右并排格式</div>
         <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,image/jpg" class="file-input">
     </div>
 
-    <!-- 双卡片展示区 -->
+    <!-- 线上URL加载区域 -->
+    <div class="url-section">
+        <input type="text" id="imageUrlInput" class="url-input" placeholder="https:// 或 http:// 线上图片地址 (平行眼并排图)" autocomplete="off">
+        <button id="loadUrlBtn" class="url-btn">🌐 加载URL图片</button>
+        <button id="clearUrlBtn" class="url-btn" style="background:#3a4e62;">清空URL</button>
+    </div>
+
+    <!-- 双卡展示区 -->
     <div class="preview-section">
-        <!-- 左: 原始图片 -->
         <div class="card">
-            <h3>📌 ❶ 原始并排图</h3>
+            <h3>📌 原始并排图</h3>
             <div class="image-box" id="originalBox">
-                <div style="color:#70869b; text-align:center;">等待上传图片<br>⬆️ 点击上方区域</div>
+                <div style="color:#70869b; text-align:center;">等待上传或输入URL<br>⬆️ 点击上方区域/粘贴链接</div>
             </div>
-            <div style="margin-top: 10px; font-size: 0.7rem; text-align: center; color:#9bb3c4;">平行眼直接看此图 (需眼肌训练)</div>
+            <div style="margin-top: 10px; font-size:0.7rem; text-align:center;">平行眼直接观看原图需训练</div>
         </div>
-        <!-- 右: 平行眼优化视图 (可调间距+辅助线) -->
         <div class="card">
-            <h3>✨ ❷ 平行眼增强视图</h3>
+            <h3>✨ 平行眼增强视图</h3>
             <div class="image-box" id="enhancedBox">
-                <canvas id="stereoCanvas" style="width:100%; height:auto; background:#0a1015; border-radius:16px;"></canvas>
+                <canvas id="stereoCanvas" style="width:100%; background:#0a1015; border-radius:16px;"></canvas>
             </div>
             <div class="control-group">
                 <div class="slider-label">
-                    <span>👁️ 左右图间距调节</span>
+                    <span>👁️ 左右图间距</span>
                     <input type="range" id="gapSlider" min="-80" max="120" value="12" step="1">
-                    <span id="gapValue" style="min-width: 45px;">12px</span>
+                    <span id="gapValue">12px</span>
                 </div>
                 <div class="slider-label">
-                    <span>📐 参考辅助线</span>
+                    <span>📐 辅助线强度</span>
                     <input type="range" id="guideOpacitySlider" min="0" max="100" value="40" step="1">
                     <span id="guideValue">40%</span>
                 </div>
                 <button id="resetViewBtn" class="btn-reset">⟳ 重置间距</button>
             </div>
-            <div style="font-size:0.7rem; text-align:center; margin-top: 8px; color:#92b6d4;">
-                建议看向两幅图中间, 放松双眼让左右影像慢慢重合 → 立体浮现
-            </div>
+            <div style="font-size:0.7rem; text-align:center; margin-top:8px;">调整间距+辅助线，帮助双眼融合 → 立体浮现</div>
         </div>
     </div>
 
-    <!-- 平行眼教学 -->
     <div class="info-tip">
-        <div style="font-weight:600; margin-bottom: 6px;">🧠 什么是平行眼？如何观看？</div>
+        <div style="font-weight:600;">🧠 平行眼技巧 + URL使用注意</div>
         <div class="guide-step">
-            <span>👁️ 1. 双眼放松，视线平行看向无限远</span>
-            <span>🎯 2. 将左右两图“中间的虚拟点”对焦</span>
-            <span>🌀 3. 当左右图慢慢重叠为三个图像时，中间那个就是立体的！</span>
+            <span>🔹 视线平行看向远处，让左右图重叠</span>
+            <span>🔹 URL图片需支持跨域(CORS)？一般能显示即可绘制</span>
+            <span>🔹 若图片加载失败，检查网络或图片地址</span>
         </div>
-        <div style="margin-top: 10px; display: flex; flex-wrap:wrap; gap: 8px; justify-content: space-between;">
-            <span><span class="badge">💡 进阶技巧</span> 眯眼后慢慢睁开，更容易融合</span>
-            <span><span class="badge">🔧 增强视图</span> 可调整左右图间距匹配个人瞳距，中心白线辅助对焦</span>
-        </div>
+        <div style="margin-top:8px;"><span class="badge">💡 进阶</span> 调整间距可补偿瞳距差异，白线/圆点帮助对焦</div>
     </div>
-    <footer>✨ 裸眼3D助手 · 平行眼专用 | 上传左右并排立体图，享受立体视觉</footer>
+    <footer>⚡ ParallelView · 支持本地/远程图片，裸眼3D平行眼利器</footer>
 </div>
 
 <script>
-    (function(){
+    (function() {
         // DOM 元素
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
@@ -324,280 +347,322 @@
         const guideOpacitySlider = document.getElementById('guideOpacitySlider');
         const guideValueSpan = document.getElementById('guideValue');
         const resetBtn = document.getElementById('resetViewBtn');
+        const imageUrlInput = document.getElementById('imageUrlInput');
+        const loadUrlBtn = document.getElementById('loadUrlBtn');
+        const clearUrlBtn = document.getElementById('clearUrlBtn');
 
-        let currentImageFile = null;      // 存储当前上传的图片文件blob
-        let originalImageElement = null;   // 用于原始显示的img元素
-        let originalImgBitmap = null;      // 图像数据 (位图)
-        let imgWidth = 0, imgHeight = 0;    // 原始图像宽高
+        // 图片数据状态
+        let originalImgBitmap = null;      // 位图数据
+        let imgWidth = 0, imgHeight = 0;
+        let currentSource = null;           // 'file' or 'url' 用于标记
+        let gapPx = 12;
+        let guideOpacity = 0.4;
 
-        // 参数
-        let gapPx = 12;           // 左右视图中间间距(像素) 正值表示分开距离
-        let guideOpacity = 0.4;    // 辅助线透明度 0-1
-        
-        // 辅助绘制标志
-        let needRedraw = true;
+        // 辅助函数 - 清空原图框并展示占位
+        function showPlaceholderInOriginal(text = '暂无图片') {
+            originalBox.innerHTML = '';
+            const placeholderDiv = document.createElement('div');
+            placeholderDiv.style.color = '#70869b';
+            placeholderDiv.style.textAlign = 'center';
+            placeholderDiv.style.padding = '20px';
+            placeholderDiv.innerText = text;
+            originalBox.appendChild(placeholderDiv);
+        }
 
-        // 更新UI内部显示函数 (绘制增强视图)
+        // 绘制增强视图 (核心平行眼优化)
         function drawEnhancedView() {
             if (!originalImgBitmap || imgWidth === 0 || imgHeight === 0) {
                 const ctx = stereoCanvas.getContext('2d');
                 ctx.clearRect(0, 0, stereoCanvas.width, stereoCanvas.height);
                 ctx.fillStyle = '#0a1015';
-                ctx.fillRect(0, 0, stereoCanvas.width, stereoCanvas.height);
+                ctx.fillRect(0, 0, stereoCanvas.width || 300, stereoCanvas.height || 200);
                 ctx.fillStyle = '#70869b';
                 ctx.font = '14px system-ui';
                 ctx.textAlign = 'center';
-                ctx.fillText('等待上传平行眼图片', stereoCanvas.width/2, stereoCanvas.height/2);
+                ctx.fillText('等待加载平行眼图片', (stereoCanvas.width || 300)/2, (stereoCanvas.height || 200)/2);
                 return;
             }
-            
-            // 获取canvas容器尺寸 (为了适配响应式，canvas的实际绘图尺寸基于图像比例)
+
             const container = document.getElementById('enhancedBox');
-            const maxWidth = container.clientWidth - 24;  // 留出内边距
+            const maxWidth = container.clientWidth - 24;
             if (maxWidth <= 0) return;
-            
-            // 目标展示高度自适应: 保持原图宽高比，但画布宽度不超过maxWidth
+
             let displayWidth = Math.min(imgWidth, maxWidth);
             let displayHeight = (displayWidth / imgWidth) * imgHeight;
-            
-            // 设置canvas实际像素尺寸 (避免模糊)
             stereoCanvas.width = displayWidth;
             stereoCanvas.height = displayHeight;
             stereoCanvas.style.width = `${displayWidth}px`;
             stereoCanvas.style.height = `${displayHeight}px`;
-            
+
             const ctx = stereoCanvas.getContext('2d');
             ctx.clearRect(0, 0, displayWidth, displayHeight);
             ctx.fillStyle = '#030a0f';
             ctx.fillRect(0, 0, displayWidth, displayHeight);
-            
-            // 将原图分为左右两半 (假设平行眼图为左+右)
+
             const halfWidth = imgWidth / 2;
-            const leftImgX = 0, leftImgY = 0, leftImgW = halfWidth, leftImgH = imgHeight;
-            const rightImgX = halfWidth, rightImgY = 0, rightImgW = halfWidth, rightImgH = imgHeight;
-            
-            // 计算绘制到canvas上的左右区域绘制起始X (基于gap间距调整)
-            // 原理：左图绘制在canvas左侧,右图绘制在canvas右侧, 中间留有gapPx间距, 并且整体居中
-            const contentTotalWidth = displayWidth;  // 整个画布宽
-            const leftDrawWidth = displayWidth * (halfWidth / imgWidth);    // 左半图缩放后的宽度
+            const leftImgW = halfWidth, leftImgH = imgHeight;
+            const rightImgW = halfWidth, rightImgH = imgHeight;
+
+            const leftDrawWidth = displayWidth * (halfWidth / imgWidth);
             const rightDrawWidth = displayWidth * (halfWidth / imgWidth);
-            
-            // 中间间距实际占用像素(按缩放比率调整gapPx视觉比例大小，让间距表现为绝对值效果更好)
-            // 为了更直观，gapPx 直接代表最终画布上两图之间的空白像素数 (用户调节更直接)
             let actualGap = gapPx;
-            // 左右图的总宽度
-            const twoImageWidth = leftDrawWidth + rightDrawWidth;
-            const availableWidth = contentTotalWidth;
-            // 如果间隙过大导致超出则自动限制偏移 (但不会超出，我们正常居中对齐)
-            let startX = (availableWidth - (twoImageWidth + actualGap)) / 2;
-            if (startX < 2) startX = 4;  // 避免贴边太厉害
-            
-            // 绘制左半图
+            const totalImgWidth = leftDrawWidth + rightDrawWidth;
+            let startX = (displayWidth - (totalImgWidth + actualGap)) / 2;
+            if (startX < 2) startX = 4;
+
+            // 绘制左半和右半
             try {
-                ctx.drawImage(originalImgBitmap, leftImgX, leftImgY, leftImgW, leftImgH, startX, 0, leftDrawWidth, displayHeight);
-                // 绘制右半图
+                ctx.drawImage(originalImgBitmap, 0, 0, leftImgW, leftImgH, startX, 0, leftDrawWidth, displayHeight);
                 const rightStartX = startX + leftDrawWidth + actualGap;
-                ctx.drawImage(originalImgBitmap, rightImgX, rightImgY, rightImgW, rightImgH, rightStartX, 0, rightDrawWidth, displayHeight);
-                
-                // 添加可调节的半透明辅助线 (两条竖线位于左右图的中央以及中间分割参考)
+                ctx.drawImage(originalImgBitmap, halfWidth, 0, rightImgW, rightImgH, rightStartX, 0, rightDrawWidth, displayHeight);
+
+                // 辅助线 (透明度依据guideOpacity)
                 if (guideOpacity > 0.01) {
                     ctx.save();
                     ctx.globalAlpha = Math.min(0.8, guideOpacity);
                     ctx.strokeStyle = '#ffd966';
                     ctx.lineWidth = 1.5;
                     ctx.setLineDash([6, 8]);
-                    
-                    // 左图中心竖线 (辅助对焦)
                     const leftCenterX = startX + leftDrawWidth / 2;
+                    const rightCenterX = rightStartX + rightDrawWidth / 2;
                     ctx.beginPath();
                     ctx.moveTo(leftCenterX, 0);
                     ctx.lineTo(leftCenterX, displayHeight);
                     ctx.stroke();
-                    
-                    // 右图中心竖线
-                    const rightCenterX = rightStartX + rightDrawWidth / 2;
                     ctx.beginPath();
                     ctx.moveTo(rightCenterX, 0);
                     ctx.lineTo(rightCenterX, displayHeight);
                     ctx.stroke();
-                    
-                    // 中间参考横线水平中点 (帮助双眼对齐)
+
                     ctx.setLineDash([4, 6]);
                     ctx.strokeStyle = '#88ddff';
                     const midY = displayHeight / 2;
                     ctx.beginPath();
-                    ctx.moveTo(2, midY);
-                    ctx.lineTo(contentTotalWidth-2, midY);
+                    ctx.moveTo(4, midY);
+                    ctx.lineTo(displayWidth-4, midY);
                     ctx.stroke();
-                    
-                    // 可选: 绘制一个中心虚点阵圆点 (在两个图的中轴之间)
+
                     ctx.beginPath();
-                    ctx.fillStyle = 'rgba(255,215,0,0.5)';
-                    ctx.arc((leftCenterX + rightCenterX)/2, midY, 4, 0, 2*Math.PI);
+                    ctx.fillStyle = `rgba(255,215,0,${Math.min(0.5, guideOpacity)})`;
+                    ctx.arc((leftCenterX + rightCenterX)/2, midY, 5, 0, 2*Math.PI);
                     ctx.fill();
-                    
                     ctx.restore();
                 }
-                
-                // 额外绘制提示文字: 如果间隙或效果明显
-                ctx.font = '12px "Segoe UI"';
-                ctx.fillStyle = '#eef4ffcc';
-                ctx.shadowBlur = 0;
-                ctx.fillText(`间距:${gapPx}px`, 8, 20);
-            } catch(e) {
-                console.warn("绘制错误", e);
+                ctx.font = '12px monospace';
+                ctx.fillStyle = '#eef4ffaa';
+                ctx.fillText(`间隙:${gapPx}px`, 8, 20);
+            } catch(e) { console.warn(e); }
+        }
+
+        // 通用图片加载 (从Image元素生成位图)
+        async function loadImageFromElement(imgElement, sourceDesc = '图片') {
+            return new Promise((resolve, reject) => {
+                if (!imgElement.complete) {
+                    imgElement.onload = async () => {
+                        try {
+                            const bitmap = await createImageBitmap(imgElement);
+                            resolve({ bitmap, width: imgElement.width, height: imgElement.height });
+                        } catch(e) { reject(e); }
+                    };
+                    imgElement.onerror = () => reject(new Error(`加载失败: ${sourceDesc}`));
+                } else {
+                    // 已经complete
+                    (async () => {
+                        try {
+                            const bitmap = await createImageBitmap(imgElement);
+                            resolve({ bitmap, width: imgElement.width, height: imgElement.height });
+                        } catch(e) { reject(e); }
+                    })();
+                }
+            });
+        }
+
+        // 显示原图到原始框
+        function displayOriginalImage(imgUrlOrElement, isUrl = false, elementToShow = null) {
+            originalBox.innerHTML = '';
+            if (elementToShow && elementToShow.tagName === 'IMG') {
+                const cloneImg = elementToShow.cloneNode(true);
+                cloneImg.style.maxWidth = '100%';
+                cloneImg.style.borderRadius = '16px';
+                originalBox.appendChild(cloneImg);
+            } else if (typeof imgUrlOrElement === 'string') {
+                const img = document.createElement('img');
+                img.src = imgUrlOrElement;
+                img.style.maxWidth = '100%';
+                img.style.borderRadius = '16px';
+                img.onerror = () => { img.alt = '加载失败'; };
+                originalBox.appendChild(img);
             }
         }
-        
-        // 重置间距为默认
+
+        // 核心：设置图片位图数据并更新视图
+        async function setImageBitmap(bitmap, width, height, previewUrl = null, previewElement = null) {
+            if (originalImgBitmap) {
+                originalImgBitmap.close?.(); // 便于内存
+            }
+            originalImgBitmap = bitmap;
+            imgWidth = width;
+            imgHeight = height;
+            if (imgWidth % 2 !== 0) {
+                const warnDiv = document.createElement('div');
+                warnDiv.className = 'error-msg';
+                warnDiv.style.marginTop = '6px';
+                warnDiv.innerText = '⚠️ 图片宽度为奇数，左右分割可能偏移，建议使用偶数宽图片';
+                originalBox.appendChild(warnDiv);
+                setTimeout(() => warnDiv.remove(), 3000);
+            }
+            drawEnhancedView();
+        }
+
+        // 处理文件对象 (File)
+        async function handleFile(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                alert('请选择图片文件');
+                return false;
+            }
+            const objectURL = URL.createObjectURL(file);
+            const imgElement = new Image();
+            imgElement.src = objectURL;
+            try {
+                const { bitmap, width, height } = await loadImageFromElement(imgElement, file.name);
+                // 展示原图
+                originalBox.innerHTML = '';
+                const displayImg = document.createElement('img');
+                displayImg.src = objectURL;
+                displayImg.style.maxWidth = '100%';
+                displayImg.style.borderRadius = '16px';
+                originalBox.appendChild(displayImg);
+                await setImageBitmap(bitmap, width, height, objectURL);
+                URL.revokeObjectURL(objectURL);
+                currentSource = 'file';
+                return true;
+            } catch(err) {
+                console.error(err);
+                showPlaceholderInOriginal('文件加载失败，请重试');
+                URL.revokeObjectURL(objectURL);
+                return false;
+            }
+        }
+
+        // 处理URL字符串
+        async function handleUrl(imageUrl) {
+            if (!imageUrl || (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://'))) {
+                alert('请输入有效的http://或https://图片地址');
+                return false;
+            }
+            // 显示加载中占位
+            showPlaceholderInOriginal('⏳ 正在加载远程图片...');
+            // 创建img元素并设置crossOrigin为anonymous尝试避免跨域阻断(不影响绘制，但若CORS受限canvas标记污染但可显示)
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.src = imageUrl;
+            // 超时处理
+            const timeoutId = setTimeout(() => {
+                if (!img.complete) {
+                    img.onerror?.();
+                }
+            }, 15000);
+            try {
+                const { bitmap, width, height } = await loadImageFromElement(img, 'URL图片');
+                clearTimeout(timeoutId);
+                // 展示原图
+                originalBox.innerHTML = '';
+                const showImg = document.createElement('img');
+                showImg.src = imageUrl;
+                showImg.style.maxWidth = '100%';
+                showImg.style.borderRadius = '16px';
+                showImg.onerror = () => { showImg.alt = '预览失败'; };
+                originalBox.appendChild(showImg);
+                await setImageBitmap(bitmap, width, height, imageUrl);
+                currentSource = 'url';
+                return true;
+            } catch(err) {
+                clearTimeout(timeoutId);
+                console.error(err);
+                showPlaceholderInOriginal(`❌ 加载URL失败: ${err.message || '网络/跨域问题'}`);
+                return false;
+            }
+        }
+
+        // 重置间距
         function resetGap() {
             gapSlider.value = '12';
             gapPx = 12;
             gapValueSpan.innerText = '12px';
-            needRedraw = true;
             drawEnhancedView();
         }
-        
-        // 根据上传的图片文件生成位图并更新界面
-        async function loadImageFromFile(file) {
-            if (!file) return;
-            // 预览原始图片
-            const objectURL = URL.createObjectURL(file);
-            const imgElement = new Image();
-            imgElement.src = objectURL;
-            
-            return new Promise((resolve, reject) => {
-                imgElement.onload = async () => {
-                    // 获取宽高
-                    const width = imgElement.width;
-                    const height = imgElement.height;
-                    if (width % 2 !== 0) {
-                        // 提示宽最好为偶数，但不阻塞
-                        console.warn("图片宽度不是偶数，可能会影响左右分割精确性");
-                    }
-                    // 存储在原始显示区
-                    originalBox.innerHTML = ''; // 清空
-                    const displayImg = document.createElement('img');
-                    displayImg.src = objectURL;
-                    displayImg.style.maxWidth = '100%';
-                    displayImg.style.borderRadius = '16px';
-                    originalBox.appendChild(displayImg);
-                    
-                    // 创建位图用于canvas高性能绘制
-                    try {
-                        const bitmap = await createImageBitmap(imgElement);
-                        originalImgBitmap = bitmap;
-                        imgWidth = width;
-                        imgHeight = height;
-                        // 更新canvas绘图
-                        drawEnhancedView();
-                        resolve(true);
-                    } catch (err) {
-                        reject(err);
-                    }
-                    // 不revoke objectURL 以免原始显示消失, 保留预览使用
-                };
-                imgElement.onerror = (err) => {
-                    originalBox.innerHTML = '<div style="color:#ff9f6e;">❌ 图片加载失败，请重试</div>';
-                    reject(err);
-                };
-            });
-        }
-        
-        // 处理文件选择
-        function handleFile(file) {
-            if (!file || !file.type.startsWith('image/')) {
-                alert('请选择有效的图片文件 (jpg/png/webp)');
-                return;
-            }
-            currentImageFile = file;
-            loadImageFromFile(file).catch(e => {
-                console.error(e);
-                originalBox.innerHTML = '<div style="color:#ffaa77;">图片解析出错，试试其他图片</div>';
-            });
-        }
-        
-        // 监听上传区域点击 和 拖拽
-        uploadArea.addEventListener('click', () => {
-            fileInput.click();
-        });
-        
+
+        // 监听上传区文件
+        uploadArea.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', (e) => {
-            if (e.target.files && e.target.files.length > 0) {
+            if (e.target.files && e.target.files[0]) {
                 handleFile(e.target.files[0]);
             }
         });
-        
-        // 拖拽上传
+        // 拖拽
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadArea.style.borderColor = '#2c9bff';
-            uploadArea.style.background = 'rgba(44, 155, 255, 0.1)';
         });
-        uploadArea.addEventListener('dragleave', (e) => {
-            e.preventDefault();
+        uploadArea.addEventListener('dragleave', () => {
             uploadArea.style.borderColor = '#3e5568';
-            uploadArea.style.background = 'rgba(10, 18, 28, 0.6)';
         });
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
             uploadArea.style.borderColor = '#3e5568';
-            uploadArea.style.background = 'rgba(10, 18, 28, 0.6)';
             const files = e.dataTransfer.files;
-            if (files.length > 0 && files[0].type.startsWith('image/')) {
+            if (files.length && files[0].type.startsWith('image/')) {
                 handleFile(files[0]);
             } else {
                 alert('请拖入图片文件');
             }
         });
-        
-        // 间距滑块事件
+
+        // URL加载
+        loadUrlBtn.addEventListener('click', () => {
+            const url = imageUrlInput.value.trim();
+            if (url) handleUrl(url);
+            else alert('请输入图片URL');
+        });
+        clearUrlBtn.addEventListener('click', () => {
+            imageUrlInput.value = '';
+            // 不清除当前图片，仅清空输入框
+        });
+        // 可选: 回车加载
+        imageUrlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                loadUrlBtn.click();
+            }
+        });
+
+        // 滑块事件
         gapSlider.addEventListener('input', (e) => {
             gapPx = parseInt(e.target.value, 10);
             gapValueSpan.innerText = gapPx + 'px';
             drawEnhancedView();
         });
-        
-        // 辅助线透明度
         guideOpacitySlider.addEventListener('input', (e) => {
             let val = parseInt(e.target.value, 10);
             guideValueSpan.innerText = val + '%';
             guideOpacity = val / 100;
             drawEnhancedView();
         });
-        
-        resetBtn.addEventListener('click', () => {
-            resetGap();
-            // 可选重置透明度滑块不动
-        });
-        
-        // 监听窗口尺寸变化重新绘制增强视图
-        window.addEventListener('resize', () => {
-            if (originalImgBitmap) {
-                drawEnhancedView();
-            }
-        });
-        
-        // 监听原始盒子或者未知重新绘制延时
-        const observer = new ResizeObserver(() => {
-            if (originalImgBitmap) drawEnhancedView();
-        });
-        observer.observe(document.getElementById('enhancedBox'));
-        
-        // 初始化绘制占位
-        (function initPlaceHolder() {
-            const ctx = stereoCanvas.getContext('2d');
-            stereoCanvas.width = 400;
-            stereoCanvas.height = 260;
-            ctx.fillStyle = '#0a1015';
-            ctx.fillRect(0, 0, 400, 260);
-            ctx.fillStyle = '#aac9e0';
-            ctx.font = '14px system-ui';
-            ctx.fillText('等待上传平行眼图片', 140, 130);
-        })();
-        
-        // 全局重置说明: 如果图片本身就是平行眼格式(左右等宽)，工具能完美展示；如果非标准但可手动调整间距适应观看
-        console.log("平行眼3D助手已启动 | 可调节左右图间距与参考线");
+        resetBtn.addEventListener('click', resetGap);
+
+        window.addEventListener('resize', () => { if (originalImgBitmap) drawEnhancedView(); });
+        const resizeObserver = new ResizeObserver(() => { if (originalImgBitmap) drawEnhancedView(); });
+        resizeObserver.observe(document.getElementById('enhancedBox'));
+
+        // 初始化占位canvas
+        const initCtx = stereoCanvas.getContext('2d');
+        stereoCanvas.width = 400;
+        stereoCanvas.height = 260;
+        initCtx.fillStyle = '#0a1015';
+        initCtx.fillRect(0, 0, 400, 260);
+        initCtx.fillStyle = '#aac9e0';
+        initCtx.fillText('等待平行眼图片', 150, 130);
+        showPlaceholderInOriginal('等待上传或输入URL');
     })();
 </script>
 </body>
